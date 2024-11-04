@@ -1,10 +1,11 @@
 from fastapi import Depends, HTTPException, status
-
-from models.responses import TokenData
+from models.responses import TokenData, NewClub
 from repositories.club_repository import ClubRepository
 from core import app_settings
 from jose import jwt, JWTError
 from fastapi.security import OAuth2PasswordBearer
+import random
+import string
 
 settings = app_settings.get_settings()
 
@@ -31,6 +32,28 @@ def validate_role(token: str = Depends(oauth2_scheme)):
         raise credentials_exception
     return token_data
 
+
+def generate_club_code(is_private: bool, is_academic: bool) -> str:
+    if is_private:
+        if is_academic:
+            prefix = "PRA"
+        else:
+            prefix = "PRF"
+    else:
+        if is_academic:
+            prefix = "PUA"
+        else:
+            prefix = "PUF"
+
+    suffix = ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
+    return prefix + suffix
+
 class ClubService:
     def __init__(self):
         self.repository = ClubRepository()
+
+    def create_club(self, newclub :NewClub):
+        club_code = generate_club_code(newclub.is_private, newclub.is_academic)
+        while not self.repository.is_unique_club_code(club_code):
+            club_code = generate_club_code(newclub.is_private, newclub.is_academic)
+        return self.repository.create_club(newclub, club_code)
