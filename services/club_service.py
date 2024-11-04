@@ -1,5 +1,5 @@
 from fastapi import Depends, HTTPException, status
-from models.responses import TokenData, NewClub
+from models.responses import TokenData, NewClub, UpdateClub
 from repositories.club_repository import ClubRepository
 from core import app_settings
 from jose import jwt, JWTError
@@ -27,10 +27,9 @@ def validate_role(token: str = Depends(oauth2_scheme)):
         club_id: int = payload.get("club")
         if user_id is None or role_name is None or club_id is None:
             raise credentials_exception
-        token_data = TokenData(user_id=user_id, role_name=role_name, club_id=club_id)
     except JWTError:
         raise credentials_exception
-    return token_data
+    return role_name == "Founder"
 
 
 def generate_club_code(is_private: bool, is_academic: bool) -> str:
@@ -57,3 +56,15 @@ class ClubService:
         while not self.repository.is_unique_club_code(club_code):
             club_code = generate_club_code(newclub.is_private, newclub.is_academic)
         return self.repository.create_club(newclub, club_code)
+
+    def update_club(self, updateclub: UpdateClub, club_id: int):
+        if validate_role():
+            return self.repository.update_club(updateclub, club_id)
+        else:
+            raise HTTPException(status_code=401, detail="Unauthorized to update club")
+
+    def delete_club(self, club_id: int):
+        return self.repository.delete_club(club_id)
+
+    def get_club(self, club_id: int):
+        return self.repository.get_club(club_id)
