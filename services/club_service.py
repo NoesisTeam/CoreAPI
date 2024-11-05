@@ -1,3 +1,5 @@
+from typing import Tuple
+
 from fastapi import Depends, HTTPException, status
 from models.responses import TokenData, NewClub, UpdateClub
 from repositories.club_repository import ClubRepository
@@ -14,7 +16,7 @@ ALGORITHM = settings.ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="access_token")
-def validate_role(token: str = Depends(oauth2_scheme)):
+def validate_role(token: str = Depends(oauth2_scheme)) -> str:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Wrong credentials, not authorized",
@@ -22,14 +24,14 @@ def validate_role(token: str = Depends(oauth2_scheme)):
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: int = payload.get("user")
         role_name: str = payload.get("role")
         club_id: int = payload.get("club")
-        if user_id is None or role_name is None or club_id is None:
+        if role_name is None:
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-    return role_name == "Founder"
+    return ":::".join([role_name, str(club_id)])
+
 
 
 def generate_club_code(is_private: bool, is_academic: bool) -> str:
@@ -58,13 +60,22 @@ class ClubService:
         return self.repository.create_club(newclub, club_code)
 
     def update_club(self, updateclub: UpdateClub, club_id: int):
-        if validate_role():
-            return self.repository.update_club(updateclub, club_id)
-        else:
-            raise HTTPException(status_code=401, detail="Unauthorized to update club")
+        return self.repository.update_club(updateclub, club_id)
 
     def delete_club(self, club_id: int):
         return self.repository.delete_club(club_id)
 
     def get_club(self, club_id: int):
         return self.repository.get_club(club_id)
+
+    def add_member(self, club_id: int, user_id: int):
+        return self.repository.add_member(club_id, user_id)
+
+    def approve_membership(self, club_id: int, user_id: int):
+        return self.repository.approve_membership(club_id, user_id)
+
+    def reject_membership(self, club_id: int, user_id: int):
+        return self.repository.reject_membership(club_id, user_id)
+
+    def get_club_members(self, club_id: int):
+        return self.repository.get_club_members(club_id)

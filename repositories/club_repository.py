@@ -83,8 +83,8 @@ class ClubRepository:
                 )
             )
             result = db.execute(query)
-            clubs = result.fetchall()
-            return clubs
+            club_ids = [row.id_club for row in result.fetchall()]
+            return self.get_clubs_by_ids(db, club_ids)
         except Exception:
             raise HTTPException(status_code=500, detail="DB Error while getting clubs by founder")
         finally:
@@ -102,11 +102,24 @@ class ClubRepository:
             )
             result = db.execute(query)
             clubs = result.fetchall()
-            return clubs
+            club_ids = [row.id_club for row in clubs]
+            return self.get_clubs_by_ids(db, club_ids)
         except Exception:
             raise HTTPException(status_code=500, detail="DB Error while getting clubs by member")
         finally:
             db.close()
+
+    # Método para obtener clubes por una lista de IDs
+    def get_clubs_by_ids(self, db, club_ids):
+        if club_ids:
+            query_clubs = self.clubs_table.select().where(
+                self.clubs_table.c.id_club.in_(club_ids)
+            )
+            result_clubs = db.execute(query_clubs)
+            clubs = result_clubs.fetchall()
+            return [Club(**club._asdict()) for club in clubs]  # Convertir cada fila a un objeto Club
+        else:
+            return []
 
     # Método para agregar al fundador como miembro del club creado
     def add_founder_to_club(self, id_club: int, id_user: int):
@@ -134,7 +147,12 @@ class ClubRepository:
             query = self.clubs_table.select().where(self.clubs_table.c.id_club == club_id)
             result = db.execute(query)
             club = result.fetchone()
-            return Club(id_club=club.id_club, club_code=club.club_code, club_name=club.club_name, club_desc=club.club_desc, is_private=club.is_private, is_academic=club.is_academic)
+            return Club(id_club=club.id_club,
+                        club_code=club.club_code,
+                        club_name=club.club_name,
+                        club_desc=club.club_desc,
+                        is_private=club.is_private,
+                        is_academic=club.is_academic)
         except Exception as e:
             raise HTTPException(status_code=500, detail="DB Error while getting club: " + str(e))
         finally:

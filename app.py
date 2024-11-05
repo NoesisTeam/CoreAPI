@@ -12,8 +12,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 # Incluir los routers (controladores)
-app.include_router(club_controller.router)
-
+app.include_router(club_controller.club_router)
+app.include_router(club_controller.member_router)
 # Código para correr la aplicación
 if __name__ == "__main__":
     import uvicorn
