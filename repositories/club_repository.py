@@ -139,7 +139,6 @@ class ClubRepository:
         finally:
             db.close()
 
-
     def get_club(self, club_id: int):
         db = self._get_db()
         print(club_id)

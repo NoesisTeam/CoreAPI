@@ -1,13 +1,14 @@
-from typing import Tuple
-
 from fastapi import Depends, HTTPException, status
-from models.responses import TokenData, NewClub, UpdateClub
-from repositories.club_repository import ClubRepository
-from core import app_settings
-from jose import jwt, JWTError
-from fastapi.security import OAuth2PasswordBearer
 import random
 import string
+
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from jose import jwt, JWTError
+
+from core import app_settings
+from models.responses import NewClub, UpdateClub
+from repositories.club_repository import ClubRepository
 
 settings = app_settings.get_settings()
 
@@ -31,8 +32,6 @@ def validate_role(token: str = Depends(oauth2_scheme)) -> str:
     except JWTError:
         raise credentials_exception
     return ":::".join([role_name, str(club_id)])
-
-
 
 def generate_club_code(is_private: bool, is_academic: bool) -> str:
     if is_private:
@@ -68,6 +67,9 @@ class ClubService:
     def get_club(self, club_id: int):
         return self.repository.get_club(club_id)
 
+    def request_membership(self, club_id: int):
+        return self.repository.request_membership(club_id)
+
     def add_member(self, club_id: int, user_id: int):
         return self.repository.add_member(club_id, user_id)
 
@@ -79,3 +81,6 @@ class ClubService:
 
     def get_club_members(self, club_id: int):
         return self.repository.get_club_members(club_id)
+
+    def get_club_by_code(self, club_code: str):
+        return self.repository.get_club_by_code(club_code)

@@ -1,14 +1,17 @@
-from fastapi import APIRouter, HTTPException
-from sqlalchemy import lambda_stmt
-
+from fastapi import APIRouter, Depends, HTTPException
 from models.responses import NewClub, UpdateClub
 from services.club_service import ClubService, validate_role
-from fastapi import APIRouter, Depends, HTTPException
 
 club_router = APIRouter(prefix="/club", tags=["Club"])
-member_router = APIRouter(prefix="/club/members", tags=["Members"])
 club_service = ClubService()
 
+def validate_role_in_club(tk_info: str, club_id: int):
+    tk_role_name = tk_info.split(":::")[0]
+    tk_club_id = int(tk_info.split(":::")[1])
+    if tk_role_name == "Founder" and tk_club_id == club_id:
+        return True
+    else:
+        return False
 
 @club_router.post("/create")
 async def create_club(info: NewClub):
@@ -20,23 +23,20 @@ async def create_club(info: NewClub):
 async def update_club(club_id: int,
                       info: UpdateClub,
                       tk_info: str = Depends(validate_role)):
-    tk_role_name = tk_info.split(":::")[0]
-    tk_club_id = int(tk_info.split(":::")[1])
-    if tk_role_name == "Founder" and tk_club_id == club_id:
+    if validate_role_in_club(tk_info, club_id):
         club_service.update_club(info, club_id)
-    return {"message": "Club updated successfully"}
+        return {"message": "Club updated successfully"}
+    else:
+        raise HTTPException(status_code=400, detail="You are not authorized to update this club")
 
 @club_router.delete("/delete/{club_id}")
 async def delete_club(club_id: int,
                       tk_info: str = Depends(validate_role)):
-    tk_role_name = tk_info.split(":::")[0]
-    tk_club_id = int(tk_info.split(":::")[1])
-    if tk_role_name == "Founder" and tk_club_id == club_id:
+    if validate_role_in_club(tk_info, club_id):
         club_service.delete_club(club_id)
         return {"message": "Club deleted successfully"}
     else:
         raise HTTPException(status_code=400, detail="You are not authorized to delete this club")
-
 
 @club_router.get("/get/{club_id}")
 async def get_club(club_id: int):
@@ -45,33 +45,38 @@ async def get_club(club_id: int):
         raise HTTPException(status_code=404, detail="Club not found")
     return club
 
-
-
-@member_router.post("/add/{club_id}/{user_id}")
+@club_router.post("/add/{club_id}/{user_id}")
 async def add_member(club_id: int, user_id: int):
     if not club_service.add_member(club_id, user_id):
         raise HTTPException(status_code=400, detail="Error while adding member")
     return {"message": "Member added successfully"}
 
-@member_router.patch("/membership/{club_id}/approve/{user_id}")
+#request to join
+@club_router.post("/membership/{club_id}/request")
+async def request_membership(club_id: int):
+    if not club_service.request_membership(club_id):
+        raise HTTPException(status_code=400, detail="Error while requesting membership")
+    return {"message": "Membership requested successfully"}
+
+@club_router.patch("/membership/{club_id}/approve/{user_id}")
 async def approve_membership(club_id: int, user_id: int, role_name: str = Depends(validate_role)):
     if not club_service.approve_membership(club_id, user_id):
         raise HTTPException(status_code=400, detail="Error while approving membership")
     return {"message": "Membership approved successfully"}
 
-@member_router.patch("/membership/{club_id}/reject/{user_id}")
+@club_router.patch("/membership/{club_id}/reject/{user_id}")
 async def reject_membership(club_id: int, user_id: int, role_name: str = Depends(validate_role)):
     if not club_service.reject_membership(club_id, user_id):
         raise HTTPException(status_code=400, detail="Error while rejecting membership")
     return {"message": "Membership rejected successfully"}
 
-@member_router.delete("/membership/{club_id}/remove/{user_id}")
+@club_router.delete("/membership/{club_id}/remove/{user_id}")
 async def remove_member(club_id: int, user_id: int, role_name: str = Depends(validate_role)):
     if not club_service.remove_member(club_id, user_id):
         raise HTTPException(status_code=400, detail="Error while removing member")
     return {"message": "Member removed successfully"}
 
-@member_router.delete("/membership/leave")
+@club_router.delete("/membership/leave")
 async def leave_club():
     if not club_service.leave_club:
         raise HTTPException(status_code=400, detail="Error while leaving club")

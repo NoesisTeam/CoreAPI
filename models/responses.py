@@ -30,3 +30,22 @@ class Club(Base):
     club_desc = Column(String(255))
     is_private = Column(Boolean)
     is_academic = Column(Boolean)
+
+class Resource(BaseModel):
+    id_club: int
+    title_resource: str
+    author : str
+    biblio_ref : str
+    reading_res_desc : str
+
+class ResourceDB(Base):
+    __tablename__ = "reading_resources"
+
+    id_reading_resource = Column(Integer, primary_key=True, index=True)
+    title = Column(String(100))
+    author = Column(String(100))
+    biblio_ref = Column(String(100))
+    reading_res_desc = Column(String(255))
+    id_club = Column(Integer)
+    url_resource = Column(String(255))
+    resource_status = Column(String(1))
