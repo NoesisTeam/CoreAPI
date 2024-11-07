@@ -29,7 +29,7 @@ async def update_club(club_id: int,
     else:
         raise HTTPException(status_code=400, detail="You are not authorized to update this club")
 
-@club_router.delete("/delete/{club_id}")
+@club_router.put("/delete/{club_id}")
 async def delete_club(club_id: int,
                       tk_info: str = Depends(validate_role)):
     if validate_role_in_club(tk_info, club_id):
