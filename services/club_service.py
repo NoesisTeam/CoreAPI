@@ -84,3 +84,6 @@ class ClubService:
 
     def get_club_by_code(self, club_code: str):
         return self.repository.get_club_by_code(club_code)
+
+    def get_all_clubs(self):
+        return self.repository.all_clubs()

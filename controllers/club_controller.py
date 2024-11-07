@@ -45,6 +45,14 @@ async def get_club(club_id: int):
         raise HTTPException(status_code=404, detail="Club not found")
     return club
 
+
+@club_router.get("/get_all")
+async def get_all_clubs():
+    clubs = club_service.get_all_clubs()
+    if not clubs:
+        raise HTTPException(status_code=404, detail="Clubs not found")
+    return clubs
+
 @club_router.post("/add/{club_id}/{user_id}")
 async def add_member(club_id: int, user_id: int):
     if not club_service.add_member(club_id, user_id):

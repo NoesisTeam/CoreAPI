@@ -72,6 +72,18 @@ class ClubRepository:
         finally:
             db.close()
 
+    def all_clubs(self):
+        db = self._get_db()
+        try:
+            query = self.clubs_table.select()
+            result = db.execute(query)
+            clubs = result.fetchall()
+            return [Club(**club._asdict()) for club in clubs]
+        except Exception as e:
+            raise HTTPException(status_code=500, detail="DB Error while getting all clubs: " + str(e))
+        finally:
+            db.close()
+
     # Método para obtener todos los clubes creados por un usuario (role=Founder)
     def get_clubs_by_founder(self, id_user: int):
         db = self._get_db()
