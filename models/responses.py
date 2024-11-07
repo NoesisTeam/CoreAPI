@@ -40,6 +40,12 @@ class Resource(BaseModel):
     biblio_ref : str
     reading_res_desc : str
 
+class NewParticipant(BaseModel):
+    id_user: int
+    id_club: int
+
+
+
 class ResourceDB(Base):
     __tablename__ = "reading_resources"
 

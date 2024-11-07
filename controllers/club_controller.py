@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from models.responses import NewClub, UpdateClub
+from models.responses import NewClub, UpdateClub, NewParticipant
 from services.club_service import ClubService, validate_role
 
 club_router = APIRouter(prefix="/club", tags=["Club"])
@@ -53,9 +53,23 @@ async def get_all_clubs():
         raise HTTPException(status_code=404, detail="Clubs not found")
     return clubs
 
-@club_router.post("/add/{club_id}/{user_id}")
-async def add_member(club_id: int, user_id: int):
-    if not club_service.add_member(club_id, user_id):
+@club_router.get("/founded/{user_id}", summary="List clubs where the user is the founder")
+async def get_founded_clubs(user_id: int):
+    clubs = club_service.get_founded_clubs(user_id)
+    if not clubs:
+        raise HTTPException(status_code=404, detail="Clubs not found")
+    return clubs
+
+@club_router.get("/joined/{user_id}", summary="List clubs where the user is a member")
+async def get_joined_clubs(user_id: int):
+    clubs = club_service.get_joined_clubs(user_id)
+    if not clubs:
+        raise HTTPException(status_code=404, detail="Clubs not found")
+    return clubs
+
+@club_router.post("/add_member")
+async def add_member(new_member: NewParticipant):
+    if not club_service.add_member(new_member.id_club, new_member.id_user):
         raise HTTPException(status_code=400, detail="Error while adding member")
     return {"message": "Member added successfully"}
 

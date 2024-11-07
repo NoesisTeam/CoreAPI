@@ -85,7 +85,7 @@ class ClubRepository:
             db.close()
 
     # Método para obtener todos los clubes creados por un usuario (role=Founder)
-    def get_clubs_by_founder(self, id_user: int):
+    def get_founded_clubs(self, id_user: int):
         db = self._get_db()
         try:
             query = self.participants_table.select().where(
@@ -103,7 +103,7 @@ class ClubRepository:
             db.close()
 
     # Método para obtener todos los clubes en los que participa un usuario (role=Member)
-    def get_clubs_by_member(self, id_user: int):
+    def get_joined_clubs(self, id_user: int):
         db = self._get_db()
         try:
             query = self.participants_table.select().where(
@@ -153,19 +153,19 @@ class ClubRepository:
 
     def get_club(self, club_id: int):
         db = self._get_db()
-        print(club_id)
         try:
-            query = self.clubs_table.select().where(self.clubs_table.c.id_club == club_id)
+            query = self.clubs_table.select().where(and_(self.clubs_table.c.id_club == club_id, self.clubs_table.c.club_status == 'A'))
             result = db.execute(query)
             club = result.fetchone()
-            return Club(id_club=club.id_club,
+            if club is None:
+                raise HTTPException(status_code=404, detail="Club not found")
+            else:
+                return Club(id_club=club.id_club,
                         club_code=club.club_code,
                         club_name=club.club_name,
                         club_desc=club.club_desc,
                         is_private=club.is_private,
                         is_academic=club.is_academic)
-        except Exception as e:
-            raise HTTPException(status_code=500, detail="DB Error while getting club: " + str(e))
         finally:
             db.close()
 
@@ -181,4 +181,19 @@ class ClubRepository:
         finally:
             db.close()
 
-
+    def add_member(self, club_id: int, user_id: int):
+        db = self._get_db()
+        try:
+            query = self.participants_table.insert().values(
+                id_user=user_id,
+                id_role=2,
+                id_club=club_id
+            )
+            db.execute(query)
+            db.commit()
+            return True
+        except Exception:
+            db.rollback()
+            raise HTTPException(status_code=400, detail="DB Error while adding member to club")
+        finally:
+            db.close()
