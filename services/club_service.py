@@ -73,8 +73,8 @@ class ClubService:
     def get_joined_clubs(self, user_id: int):
         return self.repository.get_joined_clubs(user_id)
 
-    def request_membership(self, club_id: int):
-        return self.repository.request_membership(club_id)
+    def request_membership(self, club_id: int, user_id: int):
+        return self.repository.request_membership(club_id, user_id)
 
     def add_member(self, club_id: int, user_id: int):
         return self.repository.add_member(club_id, user_id)

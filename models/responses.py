@@ -33,18 +33,24 @@ class Club(Base):
     created_at = Column(String(50))
     club_status = Column(String(1))
 
-class Resource(BaseModel):
+class ResourceToUpload(BaseModel):
     id_club: int
     title: str
     author : str
     biblio_ref : str
     reading_res_desc : str
 
+class ResourceResponse(BaseModel):
+    title: str
+    author : str
+    biblio_ref : str
+    reading_res_desc : str
+    created_at : str
+    url_resource : str
+
 class NewParticipant(BaseModel):
     id_user: int
     id_club: int
-
-
 
 class ResourceDB(Base):
     __tablename__ = "reading_resources"

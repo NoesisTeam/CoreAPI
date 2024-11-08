@@ -11,6 +11,7 @@ class ClubRepository:
         self.db = db
         self.clubs_table = get_table('clubs')  # Obtiene la tabla de usuarios
         self.participants_table = get_table('participant_role_club')  # Obtiene la tabla de participantes de un club
+        self.club_requests_table = get_table('club_requests')  # Obtiene la tabla de solicitudes de membresía
 
     def _get_db(self) -> Session:
         db = next(get_db())  # Obtiene la sesión usando el generador
@@ -195,5 +196,43 @@ class ClubRepository:
         except Exception:
             db.rollback()
             raise HTTPException(status_code=400, detail="DB Error while adding member to club")
+        finally:
+            db.close()
+
+    def request_membership(self, club_id: int, user_id: int):
+        db = self._get_db()
+        try:
+            query = self.club_requests_table.insert().values(
+                id_club=club_id,
+                id_user=user_id,
+                id_request_status=2
+            )
+            db.execute(query)
+            db.commit()
+            return True
+        except Exception:
+            db.rollback()
+            raise HTTPException(status_code=400, detail="DB Error while requesting membership")
+        finally:
+            db.close()
+
+    def approve_membership(self, club_id: int, user_id: int):
+        db = self._get_db()
+        try:
+            query = self.club_requests_table.update().where(
+                and_(
+                    self.club_requests_table.c.id_club == club_id,
+                    self.club_requests_table.c.id_user == user_id
+                )
+            ).values(
+                id_request_status=1
+            )
+            db.execute(query)
+            db.commit()
+            self.add_member(club_id, user_id)
+            return True
+        except Exception:
+            db.rollback()
+            raise HTTPException(status_code=400, detail="DB Error while approving membership")
         finally:
             db.close()

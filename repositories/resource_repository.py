@@ -2,7 +2,7 @@ from fastapi import HTTPException, Depends
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
 from core.database import get_table, get_db
-from models.responses import Resource, ResourceDB
+from models.responses import ResourceToUpload, ResourceDB
 
 
 class ResourceRepository:
@@ -15,7 +15,7 @@ class ResourceRepository:
         return db
 
     #traer la url del recurso en la tabla reading_resources que tiene ese id
-    def get_resource(self, resource_id: int) -> str:
+    def get_resource_url(self, resource_id: int) -> str:
         db = self._get_db()
         try:
             query = self.resources.select(self.resources.c.url_resource).where(self.resources.c.id_reading_resource == resource_id)
@@ -29,7 +29,7 @@ class ResourceRepository:
         finally:
             db.close()
 
-    def create_resource(self, info: Resource, url: str):
+    def create_resource(self, info: ResourceToUpload, url: str):
         db = self._get_db()
         try:
             query = self.resources.insert().values(
@@ -64,7 +64,7 @@ class ResourceRepository:
         finally:
             db.close()
 
-    def get_resources_by_club(self, club_id: int):
+    def get_all_resources_by_club(self, club_id: int):
         db = self._get_db()
         try:
             query = self.resources.select().where(and_(self.resources.c.id_club == club_id, self.resources.c.resource_status == 'A'))
@@ -74,6 +74,20 @@ class ResourceRepository:
             return self.get_resources_by_ids(db, res_ids)
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"DB Error while getting resources by club: {e}")
+        finally:
+            db.close()
+
+    def get_resource_by_id(self, resource_id: int):
+        db = self._get_db()
+        try:
+            query = self.resources.select().where(self.resources.c.id_reading_resource == resource_id)
+            result = db.execute(query)
+            resource = result.fetchone()
+            if resource is None:
+                raise HTTPException(status_code=404, detail="Resource not found")
+            return ResourceDB(**resource._asdict())
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"DB Error while getting resource by id: {e}")
         finally:
             db.close()
 

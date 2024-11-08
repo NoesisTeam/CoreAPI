@@ -27,7 +27,7 @@ async def update_club(club_id: int,
         club_service.update_club(info, club_id)
         return {"message": "Club updated successfully"}
     else:
-        raise HTTPException(status_code=400, detail="You are not authorized to update this club")
+        raise HTTPException(status_code=401, detail="You are not authorized to update this club")
 
 @club_router.put("/delete/{club_id}")
 async def delete_club(club_id: int,
@@ -36,7 +36,7 @@ async def delete_club(club_id: int,
         club_service.delete_club(club_id)
         return {"message": "Club deleted successfully"}
     else:
-        raise HTTPException(status_code=400, detail="You are not authorized to delete this club")
+        raise HTTPException(status_code=401, detail="You are not authorized to delete this club")
 
 @club_router.get("/get/{club_id}")
 async def get_club(club_id: int):
@@ -48,24 +48,15 @@ async def get_club(club_id: int):
 
 @club_router.get("/get_all")
 async def get_all_clubs():
-    clubs = club_service.get_all_clubs()
-    if not clubs:
-        raise HTTPException(status_code=404, detail="Clubs not found")
-    return clubs
+    return club_service.get_all_clubs()
 
 @club_router.get("/founded/{user_id}", summary="List clubs where the user is the founder")
 async def get_founded_clubs(user_id: int):
-    clubs = club_service.get_founded_clubs(user_id)
-    if not clubs:
-        raise HTTPException(status_code=404, detail="Clubs not found")
-    return clubs
+    return club_service.get_founded_clubs(user_id)
 
 @club_router.get("/joined/{user_id}", summary="List clubs where the user is a member")
 async def get_joined_clubs(user_id: int):
-    clubs = club_service.get_joined_clubs(user_id)
-    if not clubs:
-        raise HTTPException(status_code=404, detail="Clubs not found")
-    return clubs
+    return club_service.get_joined_clubs(user_id)
 
 @club_router.post("/add_member")
 async def add_member(new_member: NewParticipant):
@@ -74,19 +65,22 @@ async def add_member(new_member: NewParticipant):
     return {"message": "Member added successfully"}
 
 #request to join
-@club_router.post("/membership/{club_id}/request")
-async def request_membership(club_id: int):
-    if not club_service.request_membership(club_id):
+@club_router.post("/membership/request")
+async def request_membership(new_member: NewParticipant):
+    if not club_service.request_membership(new_member.id_club, new_member.id_user):
         raise HTTPException(status_code=400, detail="Error while requesting membership")
     return {"message": "Membership requested successfully"}
 
-@club_router.patch("/membership/{club_id}/approve/{user_id}")
-async def approve_membership(club_id: int, user_id: int, role_name: str = Depends(validate_role)):
-    if not club_service.approve_membership(club_id, user_id):
-        raise HTTPException(status_code=400, detail="Error while approving membership")
-    return {"message": "Membership approved successfully"}
+@club_router.patch("/membership/approve")
+async def approve_membership(new_member: NewParticipant, tk_info: str = Depends(validate_role)):
+    if validate_role_in_club(tk_info, new_member.id_club):
+        club_service.approve_membership(new_member.id_club, new_member.id_user)
+        return {"message": "Membership approved successfully"}
+    else:
+        raise HTTPException(status_code=401, detail="You are not authorized to approve membership")
 
-@club_router.patch("/membership/{club_id}/reject/{user_id}")
+
+@club_router.patch("/membership/reject")
 async def reject_membership(club_id: int, user_id: int, role_name: str = Depends(validate_role)):
     if not club_service.reject_membership(club_id, user_id):
         raise HTTPException(status_code=400, detail="Error while rejecting membership")
