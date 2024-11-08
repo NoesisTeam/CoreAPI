@@ -35,7 +35,7 @@ class Club(Base):
 
 class Resource(BaseModel):
     id_club: int
-    title_resource: str
+    title: str
     author : str
     biblio_ref : str
     reading_res_desc : str
