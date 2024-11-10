@@ -17,7 +17,21 @@ ALGORITHM = settings.ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="access_token")
-def validate_role(token: str = Depends(oauth2_scheme)) -> str:
+# def get_token_club(token: str = Depends(oauth2_scheme)) -> str:
+#     credentials_exception = HTTPException(
+#         status_code=status.HTTP_401_UNAUTHORIZED,
+#         detail="Wrong credentials, not authorized",
+#         headers={"WWW-Authenticate": "Bearer"},
+#     )
+#     try:
+#         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+#         role_name: str = payload.get("role")
+#         if role_name is None:
+#             raise credentials_exception
+#     except JWTError:
+#         raise credentials_exception
+#     return role_name
+def get_token_club(token: str = Depends(oauth2_scheme)) -> dict:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Wrong credentials, not authorized",
@@ -25,13 +39,14 @@ def validate_role(token: str = Depends(oauth2_scheme)) -> str:
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: int = payload.get("user")
         role_name: str = payload.get("role")
         club_id: int = payload.get("club")
-        if role_name is None:
+        if user_id is None or role_name is None or club_id is None:
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-    return ":::".join([role_name, str(club_id)])
+    return {"user": user_id, "role": role_name, "club": club_id}
 
 def generate_club_code(is_private: bool, is_academic: bool) -> str:
     if is_private:
@@ -84,6 +99,12 @@ class ClubService:
 
     def reject_membership(self, club_id: int, user_id: int):
         return self.repository.reject_membership(club_id, user_id)
+
+    def get_club_requests(self, club_id: int):
+        return self.repository.get_club_requests(club_id)
+
+    def remove_member(self, club_id: int, user_id: int):
+        return self.repository.remove_member(club_id, user_id)
 
     def get_club_members(self, club_id: int):
         return self.repository.get_club_members(club_id)

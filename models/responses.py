@@ -52,6 +52,17 @@ class NewParticipant(BaseModel):
     id_user: int
     id_club: int
 
+class UserID(BaseModel):
+    id_user: int
+
+class ClubRequest(Base):
+    __tablename__ = "club_requests"
+
+    id_club = Column(Integer, primary_key=True)
+    id_user = Column(Integer, primary_key=True)
+    id_request_status = Column(Integer)
+    request_date = Column(String(50))
+
 class ResourceDB(Base):
     __tablename__ = "reading_resources"
 

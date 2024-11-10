@@ -3,7 +3,7 @@ from fastapi import HTTPException, Depends
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
 from core.database import get_table, get_db
-from models.responses import NewClub, UpdateClub, Club
+from models.responses import NewClub, UpdateClub, Club, ClubRequest
 
 
 class ClubRepository:
@@ -216,6 +216,23 @@ class ClubRepository:
         finally:
             db.close()
 
+    def get_club_requests(self, club_id: int):
+        db = self._get_db()
+        try:
+            query = self.club_requests_table.select().where(
+                and_(
+                    self.club_requests_table.c.id_club == club_id,
+                    self.club_requests_table.c.id_request_status == 2
+                )
+            )
+            result = db.execute(query)
+            requests = result.fetchall()
+            return [ClubRequest(**request._asdict()) for request in requests]
+        except Exception:
+            raise HTTPException(status_code=500, detail="DB Error while getting club requests")
+        finally:
+            db.close()
+
     def approve_membership(self, club_id: int, user_id: int):
         db = self._get_db()
         try:
@@ -234,5 +251,45 @@ class ClubRepository:
         except Exception:
             db.rollback()
             raise HTTPException(status_code=400, detail="DB Error while approving membership")
+        finally:
+            db.close()
+
+    def reject_membership(self, club_id: int, user_id: int):
+        db = self._get_db()
+        try:
+            query = self.club_requests_table.update().where(
+                and_(
+                    self.club_requests_table.c.id_club == club_id,
+                    self.club_requests_table.c.id_user == user_id
+                )
+            ).values(
+                id_request_status=3
+            )
+            db.execute(query)
+            db.commit()
+            return True
+        except Exception:
+            db.rollback()
+            raise HTTPException(status_code=400, detail="DB Error while rejecting membership")
+        finally:
+            db.close()
+
+    def remove_member(self, club_id: int, user_id: int):
+        db = self._get_db()
+        try:
+            query = self.participants_table.update().where(
+                and_(
+                    self.participants_table.c.id_club == club_id,
+                    self.participants_table.c.id_user == user_id
+                )
+            ).values(
+                    participant_status='I'
+                )
+            db.execute(query)
+            db.commit()
+            return True
+        except Exception as e:
+            db.rollback()
+            raise HTTPException(status_code=400, detail="DB Error while removing member" + str(e))
         finally:
             db.close()
