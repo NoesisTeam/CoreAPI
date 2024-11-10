@@ -34,7 +34,6 @@ class Club(Base):
     club_status = Column(String(1))
 
 class ResourceToUpload(BaseModel):
-    id_club: int
     title: str
     author : str
     biblio_ref : str

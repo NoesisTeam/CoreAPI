@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from controllers import club_controller, resource_controller
+from controllers import club_controller
 from fastapi.middleware.cors import CORSMiddleware
 # Crear la instancia de la aplicación
 app = FastAPI()
@@ -13,7 +13,6 @@ app.add_middleware(
 )
 # Incluir los routers (controladores)
 app.include_router(club_controller.club_router)
-app.include_router(resource_controller.resource_router)
 # Código para correr la aplicación
 if __name__ == "__main__":
     import uvicorn

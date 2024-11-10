@@ -13,7 +13,7 @@ class ResourceService:
 
 
     # 2592000 = 30 days
-    def upload_resource(self, info: ResourceToUpload, file: UploadFile = File(...)):
+    def upload_resource(self, info: ResourceToUpload, id_club:int, file: UploadFile = File(...)):
         if file.content_type != 'application/pdf':
             raise HTTPException(status_code=400, detail="Only PDF files are allowed")
         filename = info.title + ".pdf"
@@ -23,23 +23,10 @@ class ResourceService:
         url = self.get_s3_client().generate_presigned_url('get_object',
                                                 Params={'Bucket': bucket_name, 'Key': key},
                                                 ExpiresIn=2592000)
-        return self.repository.create_resource(info, url)
+        return self.repository.create_resource(info, id_club, url)
 
-    def get_resource_file(self, resource_id: int):
-        # Obtiene la información del recurso desde la base de datos
-        resource = self.repository.get_resource_by_id(resource_id)
-
-        if not resource or not resource.url:
-            raise HTTPException(status_code=404, detail="Resource not found")
-
-        bucket_name = get_settings().AWS_BUCKET_NAME
-        key = f"readings/{resource.title}.pdf"
-
-        s3_client = self.get_s3_client()
-        file_stream = s3_client.get_object(Bucket=bucket_name, Key=key)["Body"]
-
-        # Retorna el archivo como un StreamingResponse
-        return StreamingResponse(file_stream, media_type="application/pdf")
+    def get_resource_url(self, resource_id: int):
+        return self.repository.get_resource_url(resource_id)
 
     def get_all_resources_by_club(self, club_id: int):
         return self.repository.get_all_resources_by_club(club_id)

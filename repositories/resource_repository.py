@@ -29,7 +29,7 @@ class ResourceRepository:
         finally:
             db.close()
 
-    def create_resource(self, info: ResourceToUpload, url: str):
+    def create_resource(self, info: ResourceToUpload, id_club: int, url: str):
         db = self._get_db()
         try:
             query = self.resources.insert().values(
@@ -37,7 +37,7 @@ class ResourceRepository:
                 author=info.author,
                 biblio_ref=info.biblio_ref,
                 reading_res_desc = info.reading_res_desc,
-                id_club=info.id_club,
+                id_club=id_club,
                 url_resource=url
             )
             db.execute(query)

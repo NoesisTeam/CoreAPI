@@ -1,9 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException
-from models.responses import NewClub, UpdateClub, NewParticipant, UserID
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from models.responses import NewClub, UpdateClub, NewParticipant, UserID, ResourceToUpload
+from services.club_service import get_token_club
+from services.resource_service import ResourceService
 from services.club_service import ClubService, get_token_club
 
 club_router = APIRouter(prefix="/club", tags=["Club"])
 club_service = ClubService()
+resource_service = ResourceService()
 
 def validate_role_in_club(rolename:str):
     return rolename == "Founder"
@@ -51,7 +54,7 @@ async def get_founded_clubs(user_id: int):
 async def get_joined_clubs(user_id: int):
     return club_service.get_joined_clubs(user_id)
 
-@club_router.post("/add_member")
+@club_router.post("/add/member")
 async def add_member(new_member: NewParticipant):
     if not club_service.add_member(new_member.id_club, new_member.id_user):
         raise HTTPException(status_code=400, detail="Error while adding member")
@@ -89,6 +92,30 @@ async def remove_member(membership: UserID, token: dict = Depends(get_token_club
     else:
         raise HTTPException(status_code=401, detail="You are not authorized to remove this member")
 
+
+@club_router.post("/add/resource")
+async def upload_resource(info: ResourceToUpload, file: UploadFile = File(...), token: dict = Depends(get_token_club)):
+    if validate_role_in_club(token.get("role")):
+        resource_service.upload_resource(info, token.get("club"),file)
+        return {"message": "Club updated successfully"}
+    else:
+        raise HTTPException(status_code=400, detail="You are not authorized to upload a resource")
+
+@club_router.get("/get/resource/{resource_id}")
+async def get_resource(resource_id: int):
+    return resource_service.get_resource_url(resource_id)
+
+@club_router.get("/get/resource/all")
+async def get_all_resources_by_club(club_id: int):
+    return resource_service.get_all_resources_by_club(club_id)
+
+
+
+
+
+
+
+#Soon........
 @club_router.delete("/membership/leave")
 async def leave_club():
     if not club_service.leave_club:
