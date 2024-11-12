@@ -2,7 +2,7 @@ from fastapi import HTTPException, Depends
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
 from core.database import get_table, get_db
-from models.responses import ResourceToUpload, ResourceDB
+from models.responses import ResourceToUpload, ResourceDB, ResourceResponse
 
 
 class ResourceRepository:
@@ -18,12 +18,12 @@ class ResourceRepository:
     def get_resource_url(self, resource_id: int) -> str:
         db = self._get_db()
         try:
-            query = self.resources.select(self.resources.c.url_resource).where(self.resources.c.id_reading_resource == resource_id)
+            query = self.resources.select().where(self.resources.c.id_reading_resource == resource_id)
             result = db.execute(query)
             resource = result.fetchone()
             if resource is None:
                 raise HTTPException(status_code=404, detail="Resource not found")
-            return str(resource[0])
+            return ResourceResponse(**resource._asdict()).url_resource
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"DB Error while getting url_resource: {e}")
         finally:

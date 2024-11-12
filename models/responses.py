@@ -40,6 +40,7 @@ class ResourceToUpload(BaseModel):
     reading_res_desc : str
 
 class ResourceResponse(BaseModel):
+    id_reading_resource: int
     title: str
     author : str
     biblio_ref : str

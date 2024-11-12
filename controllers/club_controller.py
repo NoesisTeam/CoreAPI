@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from models.responses import NewClub, UpdateClub, NewParticipant, UserID, ResourceToUpload
 from services.club_service import get_token_club
 from services.resource_service import ResourceService
@@ -94,10 +94,20 @@ async def remove_member(membership: UserID, token: dict = Depends(get_token_club
 
 
 @club_router.post("/add/resource")
-async def upload_resource(info: ResourceToUpload, file: UploadFile = File(...), token: dict = Depends(get_token_club)):
+async def upload_resource(title: str = Form(...),
+                          author: str = Form(...),
+                          biblio_ref: str = Form(...),
+                          reading_res_desc: str = Form(...),
+                          file: UploadFile = File(...),
+                          token: dict = Depends(get_token_club)):
     if validate_role_in_club(token.get("role")):
+        info = ResourceToUpload(title=title,
+                                author=author,
+                                biblio_ref=biblio_ref,
+                                reading_res_desc=reading_res_desc)
+
         resource_service.upload_resource(info, token.get("club"),file)
-        return {"message": "Club updated successfully"}
+        return {"message": "Resource uploaded successfully"}
     else:
         raise HTTPException(status_code=400, detail="You are not authorized to upload a resource")
 
@@ -105,12 +115,29 @@ async def upload_resource(info: ResourceToUpload, file: UploadFile = File(...), 
 async def get_resource(resource_id: int):
     return resource_service.get_resource_url(resource_id)
 
+@club_router.delete("/delete/resource/{resource_id}")
+async def delete_resource(resource_id: int, token: dict = Depends(get_token_club)):
+    if validate_role_in_club(token.get("role")):
+        resource_service.delete_resource(resource_id)
+        return {"message": "Resource deleted successfully"}
+    else:
+        raise HTTPException(status_code=401, detail="You are not authorized to delete this resource")
+
 @club_router.get("/get/resource/all")
 async def get_all_resources_by_club(club_id: int):
     return resource_service.get_all_resources_by_club(club_id)
 
+@club_router.get("/get/resource/quiz")
+async def get_quiz(resource_id: int):
+    return resource_service.get_quiz(resource_id)
 
+@club_router.post("/add/resource/quiz")
+async def add_quiz(resource_id: int, quiz: dict):
+    return resource_service.add_quiz(resource_id, quiz)
 
+@club_router.patch("/update/resource/quiz")
+async def update_quiz(resource_id: int, quiz: dict):
+    return resource_service.update_quiz(resource_id, quiz)
 
 
 

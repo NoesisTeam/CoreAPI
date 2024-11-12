@@ -1,3 +1,5 @@
+import uuid
+
 from fastapi import Depends, HTTPException, status, UploadFile, File
 from fastapi.responses import StreamingResponse
 
@@ -16,7 +18,8 @@ class ResourceService:
     def upload_resource(self, info: ResourceToUpload, id_club:int, file: UploadFile = File(...)):
         if file.content_type != 'application/pdf':
             raise HTTPException(status_code=400, detail="Only PDF files are allowed")
-        filename = info.title + ".pdf"
+        file_uuid = str(uuid.uuid4())  # Esto generará un identificador único para el archivo
+        filename = file_uuid + ".pdf"
         bucket_name = get_settings().AWS_BUCKET_NAME
         key = f"readings/{filename}"
         self.get_s3_client().upload_fileobj(file.file, bucket_name, key)
