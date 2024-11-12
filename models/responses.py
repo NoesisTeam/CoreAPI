@@ -73,6 +73,16 @@ class ResourceDB(Base):
     created_at = Column(String(50))
     url_resource = Column(String(255))
     id_club = Column(Integer)
-    id_quiz = Column(Integer)
     id_reading_resource = Column(Integer, primary_key=True, index=True)
     resource_status = Column(String(1))
+
+class QuizDB(Base):
+    __tablename__ = "quizzez"
+
+    id_quiz = Column(Integer, primary_key=True)
+    questions = Column(String(255))
+    answers = Column(String(255))
+    correct_answers = Column(String(255))
+    quantity_questions = Column(Integer)
+    minutes_to_answer = Column(Integer)
+    id_reading_resource = Column(Integer)
