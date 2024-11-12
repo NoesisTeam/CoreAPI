@@ -23,7 +23,7 @@ class ResourceRepository:
             resource = result.fetchone()
             if resource is None:
                 raise HTTPException(status_code=404, detail="Resource not found")
-            return ResourceResponse(**resource._asdict()).url_resource
+            return resource.url_resource
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"DB Error while getting url_resource: {e}")
         finally:
