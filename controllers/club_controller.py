@@ -123,7 +123,7 @@ async def delete_resource(resource_id: int, token: dict = Depends(get_token_club
     else:
         raise HTTPException(status_code=401, detail="You are not authorized to delete this resource")
 
-@club_router.get("/get/resource/all")
+@club_router.get("/get/resource/all/{club_id}")
 async def get_all_resources_by_club(club_id: int):
     return resource_service.get_all_resources_by_club(club_id)
 
