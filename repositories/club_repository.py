@@ -192,7 +192,8 @@ class ClubRepository:
             )
             db.execute(query)
             db.commit()
-            return True
+            #retornar el objeto creado
+            return
         except Exception:
             db.rollback()
             raise HTTPException(status_code=400, detail="DB Error while adding member to club")

@@ -8,7 +8,7 @@ club_router = APIRouter(prefix="/club", tags=["Club"])
 club_service = ClubService()
 resource_service = ResourceService()
 
-def validate_role_in_club(rolename:str):
+def validate_founder_role(rolename:str):
     return rolename == "Founder"
 
 @club_router.post("/create")
@@ -20,7 +20,7 @@ async def create_club(info: NewClub):
 @club_router.put("/update")
 async def update_club(info: UpdateClub,
                       token: dict = Depends(get_token_club)):
-    if validate_role_in_club(token.get("role")):
+    if validate_founder_role(token.get("role")):
         club_service.update_club(info, token.get("club"))
         return {"message": "Club updated successfully"}
     else:
@@ -28,7 +28,7 @@ async def update_club(info: UpdateClub,
 
 @club_router.put("/delete/")
 async def delete_club(token: dict = Depends(get_token_club)):
-    if validate_role_in_club(token.get("role")):
+    if validate_founder_role(token.get("role")):
         club_service.delete_club(token.get("club"))
         return {"message": "Club deleted successfully"}
     else:
@@ -46,13 +46,13 @@ async def get_club(club_id: int):
 async def get_all_clubs():
     return club_service.get_all_clubs()
 
-@club_router.get("/get/founded/{user_id}", summary="List clubs where the user is the founder")
-async def get_founded_clubs(user_id: int):
-    return club_service.get_founded_clubs(user_id)
+@club_router.get("/get/founded}", summary="List clubs where the user is the founder")
+async def get_founded_clubs(user_id: UserID):
+    return club_service.get_founded_clubs(user_id.id_user)
 
 @club_router.get("/get/joined/{user_id}", summary="List clubs where the user is a member")
-async def get_joined_clubs(user_id: int):
-    return club_service.get_joined_clubs(user_id)
+async def get_joined_clubs(user_id: UserID):
+    return club_service.get_joined_clubs(user_id.id_user)
 
 @club_router.post("/add/member")
 async def add_member(new_member: NewParticipant):
@@ -69,7 +69,7 @@ async def request_membership(new_member: NewParticipant):
 
 @club_router.patch("/membership/approve")
 async def approve_membership(membership: UserID, token: dict = Depends(get_token_club)):
-    if validate_role_in_club(token.get("role")):
+    if validate_founder_role(token.get("role")):
         club_service.approve_membership(token.get("club"), membership.id_user)
         return {"message": "Membership approved successfully"}
     else:
@@ -78,7 +78,7 @@ async def approve_membership(membership: UserID, token: dict = Depends(get_token
 
 @club_router.patch("/membership/reject")
 async def reject_membership(membership: UserID, token: dict = Depends(get_token_club)):
-    if validate_role_in_club(token.get("role")):
+    if validate_founder_role(token.get("role")):
         club_service.reject_membership(token.get("club"), membership.id_user)
         return {"message": "Membership rejected successfully"}
     else:
@@ -86,7 +86,7 @@ async def reject_membership(membership: UserID, token: dict = Depends(get_token_
 
 @club_router.patch("/membership/remove")
 async def remove_member(membership: UserID, token: dict = Depends(get_token_club)):
-    if validate_role_in_club(token.get("role")):
+    if validate_founder_role(token.get("role")):
         club_service.remove_member(token.get("club"), membership.id_user)
         return {"message": "Member removed successfully"}
     else:
@@ -100,7 +100,7 @@ async def upload_resource(title: str = Form(...),
                           reading_res_desc: str = Form(...),
                           file: UploadFile = File(...),
                           token: dict = Depends(get_token_club)):
-    if validate_role_in_club(token.get("role")):
+    if validate_founder_role(token.get("role")):
         info = ResourceToUpload(title=title,
                                 author=author,
                                 biblio_ref=biblio_ref,
@@ -117,15 +117,15 @@ async def get_resource(resource_id: int):
 
 @club_router.delete("/delete/resource/{resource_id}")
 async def delete_resource(resource_id: int, token: dict = Depends(get_token_club)):
-    if validate_role_in_club(token.get("role")):
+    if validate_founder_role(token.get("role")):
         resource_service.delete_resource(resource_id)
         return {"message": "Resource deleted successfully"}
     else:
         raise HTTPException(status_code=401, detail="You are not authorized to delete this resource")
 
-@club_router.get("/get/resource/all/{club_id}")
-async def get_all_resources_by_club(club_id: int):
-    return resource_service.get_all_resources_by_club(club_id)
+@club_router.get("/get/resource/all")
+async def get_all_resources_by_club(token = Depends(get_token_club)):
+    return resource_service.get_all_resources_by_club(token.get("club"))
 
 @club_router.get("/get/resource/quiz")
 async def get_quiz(resource_id: int):
