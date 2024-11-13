@@ -14,7 +14,7 @@ app.add_middleware(
 # Incluir los routers (controladores)
 app.include_router(club_controller.club_router)
 # Código para correr la aplicación
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)
+# if __name__ == "__main__":
+#     import uvicorn
+#     uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)
 
