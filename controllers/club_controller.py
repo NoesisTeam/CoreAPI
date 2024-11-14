@@ -46,13 +46,13 @@ async def get_club(club_id: int):
 async def get_all_clubs():
     return club_service.get_all_clubs()
 
-@club_router.get("/get/founded", summary="List clubs where the user is the founder")
-async def get_founded_clubs(user_id: UserID):
-    return club_service.get_founded_clubs(user_id.id_user)
+@club_router.get("/get/founded/{user_id}", summary="List clubs where the user is the founder")
+async def get_founded_clubs(user_id: int):
+    return club_service.get_founded_clubs(user_id)
 
-@club_router.get("/get/joined", summary="List clubs where the user is a member")
-async def get_joined_clubs(user_id: UserID):
-    return club_service.get_joined_clubs(user_id.id_user)
+@club_router.get("/get/joined{user_id}", summary="List clubs where the user is a member")
+async def get_joined_clubs(user_id: int):
+    return club_service.get_joined_clubs(user_id)
 
 @club_router.post("/add/member")
 async def add_member(new_member: NewParticipant):
