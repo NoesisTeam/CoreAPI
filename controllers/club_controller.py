@@ -84,6 +84,14 @@ async def reject_membership(membership: UserID, token: dict = Depends(get_token_
     else:
         raise HTTPException(status_code=401, detail="You are not authorized to reject membership")
 
+
+@club_router.patch("/membership/all")
+async def get_all_membership_requests(token: dict = Depends(get_token_club)):
+    if validate_founder_role(token.get("role")):
+        return club_service.get_club_requests(token.get("club"))
+    else:
+        raise HTTPException(status_code=401, detail="You are not authorized to view membership requests")
+
 @club_router.patch("/membership/remove")
 async def remove_member(membership: UserID, token: dict = Depends(get_token_club)):
     if validate_founder_role(token.get("role")):
