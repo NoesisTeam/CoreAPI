@@ -1,13 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+
 from models.responses import NewClub, UpdateClub, NewParticipant, UserID, ResourceToUpload
 from services import quiz_service
-from services.club_service import get_token_club
-from services.resource_service import ResourceService
 from services.club_service import ClubService, get_token_club
+from services.quiz_service import QuizService
+from services.resource_service import ResourceService
 
 club_router = APIRouter(prefix="/club", tags=["Club"])
 club_service = ClubService()
 resource_service = ResourceService()
+quiz_service = QuizService()
 
 def validate_founder_role(rolename:str):
     return rolename == "Founder"
@@ -41,7 +43,6 @@ async def get_club(club_id: str):
     if not club:
         raise HTTPException(status_code=404, detail="Club not found")
     return club
-
 
 @club_router.get("/get/all/{user_id}")
 async def get_all_clubs(user_id: int):
@@ -142,19 +143,27 @@ async def delete_resource(resource_id: int, token: dict = Depends(get_token_club
 async def get_all_resources_by_club(token: dict = Depends(get_token_club)):
     return resource_service.get_all_resources_by_club(token.get("club"))
 
-@club_router.get("/get/resources/quiz")
-async def get_quiz(resource_id: int):
-    return quiz_service.get_quiz(resource_id)
+@club_router.get("/get/resources/quiz/{resource_id}")
+async def get_quiz(resource_id: int, token: dict = Depends(get_token_club)):
+    if validate_founder_role(token.get("role")):
+        return quiz_service.get_quiz(resource_id)
+    if token.get("role") == "Member" and quiz_service.quiz_exists(resource_id):
+        return quiz_service.get_quiz(resource_id)
+    else:
+        raise HTTPException(status_code=400, detail="Quiz does not exist or you are not authorized to view it")
+
 
 @club_router.patch("/update/resources/quiz")
-async def update_quiz(resource_id: int, quiz: dict):
+async def update_quiz(resource_id: int, quiz: dict, token: dict = Depends(get_token_club)):
+    if not validate_founder_role(token.get("role")):
+        raise HTTPException(status_code=401, detail="You are not authorized to update this quiz")
     return quiz_service.update_quiz(resource_id, quiz)
 
 @club_router.get("/get/ranking")
 async def get_ranking(token: dict = Depends(get_token_club)):
     return club_service.get_club_ranking(token.get("club"))
 
-@club_router.get("/get/resources/ranking")
+@club_router.get("/get/resources/ranking/{resource_id}")
 async def get_ranking_by_resource(resource_id: int, token: dict = Depends(get_token_club)):
     return resource_service.get_ranking_by_resource(resource_id, token.get("club"))
 

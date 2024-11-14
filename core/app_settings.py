@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     AWS_ACCESS_KEY_ID: str
     AWS_SECRET_ACCESS_KEY: str
     AWS_BUCKET_NAME: str
+    AI_API_URL:str
     model_config = SettingsConfigDict(env_file="core/.env")
 
 

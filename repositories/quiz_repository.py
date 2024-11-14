@@ -14,7 +14,7 @@ class QuizRepository:
         db = next(get_db())
         return db
 
-    def get_quiz(self, quiz_id: int):
+    def get_quiz_founder(self, quiz_id: int):
         db = self._get_db()
         try:
             query = self.quizzez.select().where(self.quizzez.c.id_quiz == quiz_id)
@@ -48,14 +48,14 @@ class QuizRepository:
         finally:
             db.close()
 
-    def update_quiz(self, quiz_id: int, quiz: dict):
+    def update_quiz(self, resource_id, quiz: dict):
         db = self._get_db()
         try:
-            query = self.quizzez.update().where(self.quizzez.c.id_quiz == quiz_id).values(
+            query = self.quizzez.update().where(self.quizzez.c.id_reading_resource == resource_id).values(
                 questions=quiz.get('questions'),
                 answers=quiz.get('answers'),
                 correct_answers=quiz.get('correct_answers'),
-                quantity_questions=quiz.get('quantity_questions'),
+                quantity_questions=quiz.get('quantity_questions')
             )
             db.execute(query)
             db.commit()
@@ -63,6 +63,20 @@ class QuizRepository:
         except Exception as e:
             db.rollback()
             raise HTTPException(status_code=500, detail=f"DB Error while updating quiz: {e}")
+        finally:
+            db.close()
+
+    def get_quiz_member(self, resource_id: int):
+        db = self._get_db()
+        try:
+            query = self.quizzez.select().where(self.quizzez.c.id_reading_resource == resource_id)
+            result = db.execute(query)
+            quiz = result.fetchone()
+            if quiz is None:
+                raise HTTPException(status_code=404, detail="Quiz not found")
+            return QuizDB(**quiz.as_dict())
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"DB Error while getting quiz: {e}")
         finally:
             db.close()
 

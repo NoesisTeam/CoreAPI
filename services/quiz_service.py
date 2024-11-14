@@ -1,13 +1,12 @@
 from fastapi import HTTPException
-
 from repositories.quiz_repository import QuizRepository
 import requests
-
+from core.app_settings import get_settings
 from services.resource_service import ResourceService
 
-AI_API = ''
 
 
+settings = get_settings()
 def process_quiz_data(quiz: dict):
     # Procesar preguntas y opciones
     questions = []
@@ -55,16 +54,15 @@ class QuizService:
 
     def get_quiz(self, resource_id: int):
         if self.quiz_repository.quiz_exists(resource_id):
-            return self.quiz_repository.get_quiz(resource_id)
+            return self.quiz_repository.get_quiz_founder(resource_id)
         # Si no existe el quiz en la base de datos, se obtiene de la IA_API
         else:
             return self.add_quiz(resource_id)
 
-
     def add_quiz(self, resource_id: int):
         try:
 
-            url = AI_API # URL de la API externa
+            url = settings.AI_API_URL # URL de la API externa
             headers = {
                 "Content-Type": "application/json"  # Establece el tipo de contenido a JSON
             }
@@ -91,8 +89,12 @@ class QuizService:
         except Exception as e:
             raise HTTPException(status_code=500, detail="Error while getting quiz from AI_API" + str(e))
 
-    def update_quiz(self, quiz: dict):
-        return self.quiz_repository.update_quiz(quiz)
+    def get_quiz_member(self, resource_id: int):
+        return self.quiz_repository.get_quiz_founder(resource_id)
+    def quiz_exists(self, resource_id: int):
+        return self.quiz_repository.quiz_exists(resource_id)
+    def update_quiz(self, resource_id: int,quiz: dict):
+        return self.quiz_repository.update_quiz(resource_id, quiz)
 
 
 
