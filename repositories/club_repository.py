@@ -1,9 +1,9 @@
 from typing import Optional
 from fastapi import HTTPException, Depends
-from sqlalchemy import and_
+from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 from core.database import get_table, get_db
-from models.responses import NewClub, UpdateClub, Club, ClubRequest
+from models.responses import NewClub, UpdateClub, Club, ClubRequest, ClubParticipant
 
 
 class ClubRepository:
@@ -73,15 +73,30 @@ class ClubRepository:
         finally:
             db.close()
 
-    def all_clubs(self):
+    # Método para obtener todos los clubes activos en los que no soy fundador ni miembro y tampoco he solicitado membresía
+    def get_all_clubs(self, id_user: int):
         db = self._get_db()
         try:
-            query = self.clubs_table.select()
+            query = self.clubs_table.select().where(
+                and_(
+                    ~self.clubs_table.c.id_club.in_(
+                        self.participants_table.select().where(
+                            self.participants_table.c.id_user == id_user
+                        ).with_only_columns(self.participants_table.c.id_club)
+                    ),
+                    ~self.clubs_table.c.id_club.in_(
+                        self.club_requests_table.select().where(
+                            self.club_requests_table.c.id_user == id_user
+                        ).with_only_columns(self.club_requests_table.c.id_club)
+                    ),
+                    self.clubs_table.c.club_status == 'A'
+                )
+            )
             result = db.execute(query)
             clubs = result.fetchall()
-            return [Club(**club._asdict()) for club in clubs]
+            return [Club(**club._asdict()) for club in clubs]  # Convertir cada fila a un objeto Club
         except Exception as e:
-            raise HTTPException(status_code=500, detail="DB Error while getting all clubs: " + str(e))
+            raise HTTPException(status_code=500, detail="DB Error while getting all clubs " + str(e))
         finally:
             db.close()
 
@@ -152,10 +167,15 @@ class ClubRepository:
         finally:
             db.close()
 
-    def get_club(self, club_id: int):
+    def get_club(self, club_id: str):
         db = self._get_db()
         try:
-            query = self.clubs_table.select().where(and_(self.clubs_table.c.id_club == club_id, self.clubs_table.c.club_status == 'A'))
+            query = self.clubs_table.select().where(
+                and_(
+                    or_(self.clubs_table.c.id_club == club_id,
+                        self.clubs_table.c.club_code== club_id
+                        ),
+                        self.clubs_table.c.club_status == 'A'))
             result = db.execute(query)
             club = result.fetchone()
             if club is None:
@@ -217,6 +237,19 @@ class ClubRepository:
         finally:
             db.close()
 
+    def get_requests(self, user_id: int):
+        db = self._get_db()
+        try:
+            query = self.club_requests_table.select().where(and_(self.club_requests_table.c.id_user == user_id,
+                                                                 self.club_requests_table.c.id_request_status != 1))
+            result = db.execute(query)
+            requests = result.fetchall()
+            return [ClubRequest(**request._asdict()) for request in requests]
+        except Exception:
+            raise HTTPException(status_code=500, detail="DB Error while getting requests")
+        finally:
+            db.close()
+
     def get_club_requests(self, club_id: int):
         db = self._get_db()
         try:
@@ -272,6 +305,24 @@ class ClubRepository:
         except Exception:
             db.rollback()
             raise HTTPException(status_code=400, detail="DB Error while rejecting membership")
+        finally:
+            db.close()
+
+    # Método para obtener el ranking de un club ordenado de mayor a menor segun la columna total_score
+    def get_club_ranking(self, club_id: int):
+        db = self._get_db()
+        try:
+            query = self.participants_table.select().where(
+                and_(
+                    self.participants_table.c.id_club == club_id,
+                    self.participants_table.c.participant_status == 'A'
+                )
+            ).order_by(self.participants_table.c.total_score.desc())
+            result = db.execute(query)
+            participants = result.fetchall()
+            return [ClubParticipant(**participant._asdict()) for participant in participants]
+        except Exception:
+            raise HTTPException(status_code=500, detail="DB Error while getting club ranking")
         finally:
             db.close()
 

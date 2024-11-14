@@ -79,7 +79,7 @@ class ClubService:
     def delete_club(self, club_id: int):
         return self.repository.delete_club(club_id)
 
-    def get_club(self, club_id: int):
+    def get_club(self, club_id: str):
         return self.repository.get_club(club_id)
 
     def get_founded_clubs(self, user_id: int):
@@ -90,6 +90,9 @@ class ClubService:
 
     def request_membership(self, club_id: int, user_id: int):
         return self.repository.request_membership(club_id, user_id)
+
+    def get_requests(self, user_id: int):
+        return self.repository.get_requests(user_id)
 
     def add_member(self, club_id: int, user_id: int):
         return self.repository.add_member(club_id, user_id)
@@ -106,11 +109,11 @@ class ClubService:
     def remove_member(self, club_id: int, user_id: int):
         return self.repository.remove_member(club_id, user_id)
 
-    def get_club_members(self, club_id: int):
-        return self.repository.get_club_members(club_id)
+    def get_club_ranking(self, club_id: int):
+        return self.repository.get_club_ranking(club_id)
 
     def get_club_by_code(self, club_code: str):
-        return self.repository.get_club_by_code(club_code)
+        return self.repository.get_club(club_code)
 
-    def get_all_clubs(self):
-        return self.repository.all_clubs()
+    def get_all_clubs(self, user_id: int):
+        return self.repository.get_all_clubs(user_id)

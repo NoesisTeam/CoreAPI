@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from models.responses import NewClub, UpdateClub, NewParticipant, UserID, ResourceToUpload
+from services import quiz_service
 from services.club_service import get_token_club
 from services.resource_service import ResourceService
 from services.club_service import ClubService, get_token_club
@@ -35,16 +36,16 @@ async def delete_club(token: dict = Depends(get_token_club)):
         raise HTTPException(status_code=401, detail="You are not authorized to delete this club")
 
 @club_router.get("/get/{club_id}")
-async def get_club(club_id: int):
+async def get_club(club_id: str):
     club = club_service.get_club(club_id)
     if not club:
         raise HTTPException(status_code=404, detail="Club not found")
     return club
 
 
-@club_router.get("/get/all")
-async def get_all_clubs():
-    return club_service.get_all_clubs()
+@club_router.get("/get/all/{user_id}")
+async def get_all_clubs(user_id: int):
+    return club_service.get_all_clubs(user_id)
 
 @club_router.get("/get/founded/{user_id}", summary="List clubs where the user is the founder")
 async def get_founded_clubs(user_id: int):
@@ -53,6 +54,12 @@ async def get_founded_clubs(user_id: int):
 @club_router.get("/get/joined/{user_id}", summary="List clubs where the user is a member")
 async def get_joined_clubs(user_id: int):
     return club_service.get_joined_clubs(user_id)
+
+
+#traer los clubes en los que fuí rechazado o en los que solicité membresía
+@club_router.get("/get/requests/{user_id}")
+async def get_requests(user_id: int):
+    return club_service.get_requests(user_id)
 
 @club_router.post("/add/member")
 async def add_member(new_member: NewParticipant):
@@ -85,7 +92,7 @@ async def reject_membership(membership: UserID, token: dict = Depends(get_token_
         raise HTTPException(status_code=401, detail="You are not authorized to reject membership")
 
 
-@club_router.patch("/membership/all")
+@club_router.patch("/get/requests/all")
 async def get_all_membership_requests(token: dict = Depends(get_token_club)):
     if validate_founder_role(token.get("role")):
         return club_service.get_club_requests(token.get("club"))
@@ -119,11 +126,11 @@ async def upload_resource(title: str = Form(...),
     else:
         raise HTTPException(status_code=400, detail="You are not authorized to upload a resource")
 
-@club_router.get("/get/resource/{resource_id}")
+@club_router.get("/get/resources/{resource_id}")
 async def get_resource(resource_id: int):
     return resource_service.get_resource_url(resource_id)
 
-@club_router.delete("/delete/resource/{resource_id}")
+@club_router.delete("/delete/resources/{resource_id}")
 async def delete_resource(resource_id: int, token: dict = Depends(get_token_club)):
     if validate_founder_role(token.get("role")):
         resource_service.delete_resource(resource_id)
@@ -131,24 +138,25 @@ async def delete_resource(resource_id: int, token: dict = Depends(get_token_club
     else:
         raise HTTPException(status_code=401, detail="You are not authorized to delete this resource")
 
-@club_router.get("/get/resource/all")
+@club_router.get("/get/resources/all")
 async def get_all_resources_by_club(token = Depends(get_token_club)):
     return resource_service.get_all_resources_by_club(token.get("club"))
 
-@club_router.get("/get/resource/quiz")
+@club_router.get("/get/resources/quiz")
 async def get_quiz(resource_id: int):
-    return resource_service.get_quiz(resource_id)
+    return quiz_service.get_quiz(resource_id)
 
-@club_router.post("/add/resource/quiz")
-async def add_quiz(resource_id: int, quiz: dict):
-    return resource_service.add_quiz(resource_id, quiz)
-
-@club_router.patch("/update/resource/quiz")
+@club_router.patch("/update/resources/quiz")
 async def update_quiz(resource_id: int, quiz: dict):
-    return resource_service.update_quiz(resource_id, quiz)
+    return quiz_service.update_quiz(resource_id, quiz)
 
+@club_router.get("/get/ranking")
+async def get_ranking(token: dict = Depends(get_token_club)):
+    return club_service.get_club_ranking(token.get("club"))
 
-
+@club_router.get("/get/resources/ranking")
+async def get_ranking_by_resource(resource_id: int, token: dict = Depends(get_token_club)):
+    return resource_service.get_ranking_by_resource(resource_id, token.get("club"))
 
 #Soon........
 @club_router.delete("/membership/leave")

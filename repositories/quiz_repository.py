@@ -28,7 +28,7 @@ class QuizRepository:
         finally:
             db.close()
 
-    def add_quiz(self, resource_id: int, quiz: dict):
+    def save_quiz(self, resource_id: int, quiz: dict):
         db = self._get_db()
         try:
             query = self.quizzez.insert().values(
@@ -36,7 +36,7 @@ class QuizRepository:
                 answers=quiz.get('answers'),
                 correct_answers=quiz.get('correct_answers'),
                 quantity_questions=quiz.get('quantity_questions'),
-                minutes_to_answer=quiz.get('minutes_to_answer'),
+                minutes_to_answer=5,
                 id_reading_resource=resource_id
             )
             db.execute(query)
@@ -56,7 +56,6 @@ class QuizRepository:
                 answers=quiz.get('answers'),
                 correct_answers=quiz.get('correct_answers'),
                 quantity_questions=quiz.get('quantity_questions'),
-                minutes_to_answer=quiz.get('minutes_to_answer'),
             )
             db.execute(query)
             db.commit()

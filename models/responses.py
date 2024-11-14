@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy import Column, Integer, String, Boolean, DECIMAL, Float
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
@@ -63,6 +63,21 @@ class ClubRequest(Base):
     id_request_status = Column(Integer)
     request_date = Column(String(50))
 
+class ClubParticipant(Base):
+    __tablename__ = "club_participants"
+
+    id_club = Column(Integer, primary_key=True)
+    id_user = Column(Integer, primary_key=True)
+    id_role = Column(Integer)
+    quantity_quizzes_solved = Column(Integer)
+    quantity_questions_answered = Column(Integer)
+    quantity_perfect_quizzes = Column(Integer)
+    quantity_reading_resources_read = Column(Integer)
+    created_at = Column(String(50))
+    nickname = Column(String(50))
+    total_score = Column(DECIMAL(10,3))
+    participant_status = Column(String(1))
+
 class ResourceDB(Base):
     __tablename__ = "reading_resources"
 
@@ -86,3 +101,15 @@ class QuizDB(Base):
     quantity_questions = Column(Integer)
     minutes_to_answer = Column(Integer)
     id_reading_resource = Column(Integer)
+
+class QuizResult(Base):
+    __tablename__ = "quiz_results"
+
+    id_user = Column(Integer, primary_key=True)
+    id_role = Column(Integer, primary_key=True)
+    id_club = Column(Integer, primary_key=True)
+    quantity_correct_answers = Column(Integer)
+    time_spent = Column(Integer)
+    created_at = Column(String(50))
+    score = Column(Float)
+    id_quiz = Column(Integer, primary_key=True)
