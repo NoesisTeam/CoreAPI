@@ -126,7 +126,7 @@ async def upload_resource(title: str = Form(...),
     else:
         raise HTTPException(status_code=400, detail="You are not authorized to upload a resource")
 
-@club_router.get("/get/resources/{resource_id}")
+@club_router.get("/get/resources/id/{resource_id}")
 async def get_resource(resource_id: int):
     return resource_service.get_resource_url(resource_id)
 
@@ -139,7 +139,7 @@ async def delete_resource(resource_id: int, token: dict = Depends(get_token_club
         raise HTTPException(status_code=401, detail="You are not authorized to delete this resource")
 
 @club_router.get("/get/resources/all")
-async def get_all_resources_by_club(token = Depends(get_token_club)):
+async def get_all_resources_by_club(token: dict = Depends(get_token_club)):
     return resource_service.get_all_resources_by_club(token.get("club"))
 
 @club_router.get("/get/resources/quiz")
