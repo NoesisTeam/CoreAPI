@@ -64,7 +64,9 @@ class QuizService:
 
     def get_quiz(self, resource_id: int):
         if self.quiz_repository.quiz_exists(resource_id):
-            return self.quiz_repository.get_quiz_founder(resource_id)
+            data = self.quiz_repository.get_quiz_founder(resource_id)
+            print(data)
+            return data
         # Si no existe el quiz en la base de datos, se obtiene de la IA_API
         else:
             return self.add_quiz(resource_id)
@@ -89,9 +91,7 @@ class QuizService:
             # Verifica que la estructura del JSON sea la esperada
             if "questions" not in data_quiz or "answers" not in data_quiz:
                 raise HTTPException(status_code=500, detail="IA_API response is not valid")
-            print(data_quiz)
             data_quiz = process_quiz_data(data_quiz)  # Procesa el JSON obtenido
-            print(data_quiz)
             self.quiz_repository.save_quiz(resource_id, data_quiz)  # Guarda el quiz en la base de datos
             return data_quiz  # Retorna el JSON con la estructura obtenida
 
