@@ -63,6 +63,13 @@ class ClubRequest(Base):
     id_request_status = Column(Integer)
     request_date = Column(String(50))
 
+class ClubRequestResponse(BaseModel):
+    id_club: int
+    user_name: str
+    id_request_status: int
+    request_date: str
+
+
 class ClubParticipant(Base):
     __tablename__ = "club_participants"
 

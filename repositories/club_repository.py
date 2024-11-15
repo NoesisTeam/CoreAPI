@@ -12,6 +12,7 @@ class ClubRepository:
         self.clubs_table = get_table('clubs')  # Obtiene la tabla de usuarios
         self.participants_table = get_table('participant_role_club')  # Obtiene la tabla de participantes de un club
         self.club_requests_table = get_table('club_requests')  # Obtiene la tabla de solicitudes de membresía
+        self.users_table = get_table('users')  # Obtiene la tabla de usuarios
 
     def _get_db(self) -> Session:
         db = next(get_db())  # Obtiene la sesión usando el generador
@@ -250,20 +251,35 @@ class ClubRepository:
         finally:
             db.close()
 
-    def get_club_requests(self, club_id: int):
+    def get_club_requests_with_user_names(self, club_id: int):
         db = self._get_db()
         try:
-            query = self.club_requests_table.select().where(
+            # Realizamos un JOIN entre club_requests_table y users_table para obtener solo los campos necesarios
+            query = self.club_requests_table.join(
+                self.users_table,
+                self.club_requests_table.c.id_user == self.users_table.c.id_user
+            ).select().where(
                 and_(
                     self.club_requests_table.c.id_club == club_id,
                     self.club_requests_table.c.id_request_status == 2
                 )
             )
+
             result = db.execute(query)
             requests = result.fetchall()
-            return [ClubRequest(**request._asdict()) for request in requests]
+
+            # Filtramos los datos para solo incluir los campos requeridos en la respuesta
+            return [
+                {
+                    "id_club": request.id_club,
+                    "id_user": request.id_user,
+                    "request_date": request.request_date,
+                    "user_name": request.user_name
+                }
+                for request in requests
+            ]
         except Exception:
-            raise HTTPException(status_code=500, detail="DB Error while getting club requests")
+            raise HTTPException(status_code=500, detail="DB Error while getting club requests with user names")
         finally:
             db.close()
 

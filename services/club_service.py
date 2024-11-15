@@ -104,7 +104,7 @@ class ClubService:
         return self.repository.reject_membership(club_id, user_id)
 
     def get_club_requests(self, club_id: int):
-        return self.repository.get_club_requests(club_id)
+        return self.repository.get_club_requests_with_user_names(club_id)
 
     def remove_member(self, club_id: int, user_id: int):
         return self.repository.remove_member(club_id, user_id)

@@ -58,7 +58,7 @@ async def get_joined_clubs(user_id: int):
 
 
 #traer los clubes en los que fuí rechazado o en los que solicité membresía
-@club_router.get("/get/requests/{user_id}")
+@club_router.get("/get/requests/id/{user_id}")
 async def get_requests(user_id: int):
     return club_service.get_requests(user_id)
 
@@ -93,7 +93,7 @@ async def reject_membership(membership: UserID, token: dict = Depends(get_token_
         raise HTTPException(status_code=401, detail="You are not authorized to reject membership")
 
 
-@club_router.patch("/get/requests/all")
+@club_router.get("/get/requests/all")
 async def get_all_membership_requests(token: dict = Depends(get_token_club)):
     if validate_founder_role(token.get("role")):
         return club_service.get_club_requests(token.get("club"))
