@@ -102,12 +102,16 @@ class ResourceRepository:
             quiz = result.fetchone()
             if quiz is None:
                 raise HTTPException(status_code=404, detail="Quiz not found")
-            query_res = self.quiz_results.select().where(and_(self.quiz_results.c.id_quiz == quiz.id_quiz,
-                                                              self.quiz_results.c.id_club == club_id)
-                                                         ).order_by(self.quiz_results.c.score.desc())
-            result_res = db.execute(query_res)
-            quiz_results = result_res.fetchall()
-            return QuizResult(**quiz_results[0]._asdict())
+            else:
+                query_res = self.quiz_results.select().where(and_(self.quiz_results.c.id_quiz == quiz.id_quiz,
+                                                                  self.quiz_results.c.id_club == club_id)
+                                                             ).order_by(self.quiz_results.c.score.desc())
+                result_res = db.execute(query_res)
+                quiz_results = result_res.fetchall()
+                return QuizResult(**quiz_results[0]._asdict())
+        except HTTPException as http_exc:
+            # Permitir que las excepciones HTTP pasen tal como son (404, etc.)
+            raise http_exc
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"DB Error while getting ranking by resource: {e}")
         finally:

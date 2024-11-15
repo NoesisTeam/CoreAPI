@@ -85,19 +85,18 @@ class QuizService:
             if response.status_code != 200:
                 raise HTTPException(status_code=response.status_code,
                                     detail="Error while getting quiz from AI_API")
-            else:
-                print("Error:", response.status_code, response.text)
 
             # Verifica que la estructura del JSON sea la esperada
             if "questions" not in data_quiz or "answers" not in data_quiz:
                 raise HTTPException(status_code=500, detail="IA_API response is not valid")
-
+            print(data_quiz)
             data_quiz = process_quiz_data(data_quiz)  # Procesa el JSON obtenido
+            print(data_quiz)
             self.quiz_repository.save_quiz(resource_id, data_quiz)  # Guarda el quiz en la base de datos
             return data_quiz  # Retorna el JSON con la estructura obtenida
 
         except Exception as e:
-            raise HTTPException(status_code=500, detail="Error while getting quiz from AI_API" + str(e))
+            raise HTTPException(status_code=500, detail="Error while getting quiz from AI_API: " + str(e))
 
     def get_quiz_member(self, resource_id: int):
         return self.quiz_repository.get_quiz_founder(resource_id)

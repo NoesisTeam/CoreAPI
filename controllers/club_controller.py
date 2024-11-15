@@ -159,8 +159,9 @@ async def update_quiz(resource_id: int, quiz: dict, token: dict = Depends(get_to
         raise HTTPException(status_code=401, detail="You are not authorized to update this quiz")
     return quiz_service.update_quiz(resource_id, quiz)
 
-@club_router.get("/get/ranking")
+@club_router.get("/ranking")
 async def get_ranking(token: dict = Depends(get_token_club)):
+    print(token.get("club"))
     return club_service.get_club_ranking(token.get("club"))
 
 @club_router.get("/get/resources/ranking/{resource_id}")
