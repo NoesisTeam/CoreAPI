@@ -64,14 +64,14 @@ class QuizService:
 
     def get_quiz(self, resource_id: int):
         if self.quiz_repository.quiz_exists(resource_id):
-            data = self.quiz_repository.get_quiz_founder(resource_id)
-            print(data)
+            data = self.quiz_repository.get_quiz(resource_id)
             return data
         # Si no existe el quiz en la base de datos, se obtiene de la IA_API
         else:
-            return self.add_quiz(resource_id)
+            quiz = self.get_data(resource_id)
+            return self.quiz_repository.save_quiz(resource_id, quiz)
 
-    def add_quiz(self, resource_id: int):
+    def get_data(self, resource_id: int):
         try:
 
             url = settings.AI_API_URL # URL de la API externa
@@ -91,19 +91,19 @@ class QuizService:
             # Verifica que la estructura del JSON sea la esperada
             if "questions" not in data_quiz or "answers" not in data_quiz:
                 raise HTTPException(status_code=500, detail="IA_API response is not valid")
-            data_quiz = process_quiz_data(data_quiz)  # Procesa el JSON obtenido
-            self.quiz_repository.save_quiz(resource_id, data_quiz)  # Guarda el quiz en la base de datos
-            return data_quiz  # Retorna el JSON con la estructura obtenida
+            return process_quiz_data(data_quiz) # Retorna el JSON con la estructura obtenida
 
         except Exception as e:
             raise HTTPException(status_code=500, detail="Error while getting quiz from AI_API: " + str(e))
 
     def get_quiz_member(self, resource_id: int):
-        return self.quiz_repository.get_quiz_founder(resource_id)
-    def quiz_exists(self, resource_id: int):
-        return self.quiz_repository.quiz_exists(resource_id)
-    def update_quiz(self, resource_id: int,quiz: dict):
-        return self.quiz_repository.update_quiz(resource_id, quiz)
+        if not self.quiz_repository.quiz_exists(resource_id):
+            raise HTTPException(status_code=404, detail="Quiz not found")
+        return self.quiz_repository.get_quiz(resource_id)
+    def regen_quiz(self, resource_id: int):
+        quiz = self.get_data(resource_id)
+        self.quiz_repository.regen_quiz(resource_id, quiz)
+        return quiz
 
 
 
