@@ -7,33 +7,43 @@ from services.resource_service import ResourceService
 
 
 settings = get_settings()
+
+
 def process_quiz_data(quiz: dict):
     # Procesar preguntas y opciones
     questions = []
-    correct_answers = []
     all_answers = []
+    correct_answers = []
 
-    for i, question_text in enumerate(quiz["questions"], start=1):
-        # Dividir en pregunta y opciones
-        question_split = question_text.split(" ")
-        question_text_only = " ".join(question_split[1:]).split(" A-")[0].strip()
+    # Iterar sobre las preguntas
+    for question_text in quiz["questions"]:
+        # Extraer solo el texto de la pregunta, eliminando el número y el punto
+        question_text_only = question_text.split(" ", 1)[1].strip()
 
-        # Separar opciones y almacenar en un arreglo
-        options = question_text.split(" A-")[1].split(" B-")
-        option_a = "A-" + options[0].strip()
-        options_rest = options[1].split(" C-")
-        option_b = "B-" + options_rest[0].strip()
-        options_rest = options_rest[1].split(" D-")
-        option_c = "C-" + options_rest[0].strip()
-        option_d = "D-" + options_rest[1].strip()
+        # Añadir la pregunta formateada a la lista
+        questions.append({"question": question_text_only})
 
-        # Añadir pregunta formateada y opciones a las listas
-        questions.append({
-            "question": question_text_only
-        })
+    # Iterar sobre las opciones
+    for option_set in quiz["options"]:
+        # Inicializar las opciones en vacío
+        option_a, option_b, option_c, option_d = "", "", "", ""
+
+        # Dividir las opciones usando los prefijos si están presentes
+        options_text = option_set["options"]
+
+        if "A-" in options_text:
+            option_a = "A-" + options_text.split("A-")[1].split("B-")[0].strip()
+        if "B-" in options_text:
+            option_b = "B-" + options_text.split("B-")[1].split("C-")[0].strip()
+        if "C-" in options_text:
+            option_c = "C-" + options_text.split("C-")[1].split("D-")[0].strip()
+        if "D-" in options_text:
+            option_d = "D-" + options_text.split("D-")[1].strip()
+
+        # Añadir las opciones de respuesta a la lista
         all_answers.append([option_a, option_b, option_c, option_d])
 
-    # Procesar respuestas correctas
+    # Iterar sobre las respuestas correctas
     for answer in quiz["answers"]:
         correct_answers.append(answer["answer"])
 
