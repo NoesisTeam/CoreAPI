@@ -2,7 +2,7 @@ from fastapi import HTTPException, Depends
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
 from core.database import get_table, get_db
-from models.responses import ResourceToUpload, ResourceDB, ResourceResponse, QuizResult
+from models.responses import ResourceToUpload, ResourceDB, ResourceResponse, QuizResult, Ranking
 
 
 class ResourceRepository:
@@ -113,14 +113,7 @@ class ResourceRepository:
             rankings = result.fetchall()
 
             # Construimos una lista de diccionarios con los resultados del ranking
-            return [
-                {
-                    "id_user": ranking.id_user,
-                    "user_name": ranking.user_name,
-                    "score": ranking.score
-                }
-                for ranking in rankings
-            ]
+            return [Ranking(**ranking._asdict()) for ranking in rankings]
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"DB Error while getting resource ranking: {e}")
         finally:

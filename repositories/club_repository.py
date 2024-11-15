@@ -3,7 +3,7 @@ from fastapi import HTTPException, Depends
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 from core.database import get_table, get_db
-from models.responses import NewClub, UpdateClub, Club, ClubRequest, ClubParticipant
+from models.responses import NewClub, UpdateClub, Club, ClubRequest, ClubParticipant, Ranking
 
 
 class ClubRepository:
@@ -340,14 +340,7 @@ class ClubRepository:
             ).order_by(self.participants_table.c.total_score.desc())
             result = db.execute(query)
             participants = result.fetchall()
-            return [
-                {
-                    "id_user": participant.id_user,
-                    "user_name": participant.user_name,
-                    "total_score": participant.total_score
-                }
-                for participant in participants
-            ]
+            return [Ranking(**participant._asdict()) for participant in participants]
         except Exception as e:
             raise HTTPException(status_code=500, detail="DB Error while getting club ranking" + str(e))
         finally:

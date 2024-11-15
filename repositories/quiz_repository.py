@@ -2,6 +2,7 @@ from fastapi import Depends, HTTPException
 from sqlalchemy.orm import Session
 from core.database import get_db, get_table
 from models.responses import QuizDB
+import json
 
 
 class QuizRepository:
@@ -31,10 +32,15 @@ class QuizRepository:
     def save_quiz(self, resource_id: int, quiz: dict):
         db = self._get_db()
         try:
+            # Convertir listas a cadenas JSON
+            questions_json = json.dumps(quiz.get('questions'))
+            answers_json = json.dumps(quiz.get('answers'))
+            correct_answers_json = json.dumps(quiz.get('correct_answers'))
+
             query = self.quizzez.insert().values(
-                questions=quiz.get('questions'),
-                answers=quiz.get('answers'),
-                correct_answers=quiz.get('correct_answers'),
+                questions=questions_json,
+                answers=answers_json,
+                correct_answers=correct_answers_json,
                 quantity_questions=quiz.get('quantity_questions'),
                 minutes_to_answer=5,
                 id_reading_resource=resource_id
