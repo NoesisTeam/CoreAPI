@@ -128,7 +128,7 @@ async def upload_resource(title: str = Form(...),
         raise HTTPException(status_code=400, detail="You are not authorized to upload a resource")
 
 @club_router.get("/get/resources/id/{resource_id}")
-async def get_resource(resource_id: int):
+async def get_resource(resource_id: int, token: dict = Depends(get_token_club)):
     return resource_service.get_resource_url(resource_id)
 
 @club_router.patch("/delete/resources/{resource_id}")
