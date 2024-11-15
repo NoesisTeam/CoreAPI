@@ -327,9 +327,12 @@ class ClubRepository:
     # Método para obtener el ranking de un club ordenado de mayor a menor segun la columna total_score
     def get_club_ranking(self, club_id: int):
         db = self._get_db()
-        print(club_id)
         try:
-            query = self.participants_table.select().where(
+            #join con users para obtener el nombre del usuario
+            query = self.participants_table.join(
+                self.users_table,
+                self.participants_table.c.id_user == self.users_table.c.id_user
+            ).select().where(
                 and_(
                     self.participants_table.c.id_club == club_id,
                     self.participants_table.c.participant_status == 'A'
@@ -337,8 +340,14 @@ class ClubRepository:
             ).order_by(self.participants_table.c.total_score.desc())
             result = db.execute(query)
             participants = result.fetchall()
-            print(participants)
-            return [ClubParticipant(**participant._asdict()) for participant in participants]
+            return [
+                {
+                    "id_user": participant.id_user,
+                    "user_name": participant.user_name,
+                    "total_score": participant.total_score
+                }
+                for participant in participants
+            ]
         except Exception as e:
             raise HTTPException(status_code=500, detail="DB Error while getting club ranking" + str(e))
         finally:

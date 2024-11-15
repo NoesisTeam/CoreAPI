@@ -85,6 +85,7 @@ class ClubParticipant(Base):
     total_score = Column(DECIMAL(10,3))
     participant_status = Column(String(1))
 
+
 class ResourceDB(Base):
     __tablename__ = "reading_resources"
 

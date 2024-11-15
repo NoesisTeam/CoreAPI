@@ -166,7 +166,7 @@ async def get_ranking(token: dict = Depends(get_token_club)):
 
 @club_router.get("/get/resources/ranking/{resource_id}")
 async def get_ranking_by_resource(resource_id: int, token: dict = Depends(get_token_club)):
-    return resource_service.get_ranking_by_resource(resource_id, token.get("club"))
+    return resource_service.get_ranking_by_resource(resource_id)
 
 #Soon........
 @club_router.delete("/membership/leave")

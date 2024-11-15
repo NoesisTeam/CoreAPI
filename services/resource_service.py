@@ -34,8 +34,8 @@ class ResourceService:
     def get_all_resources_by_club(self, club_id: int):
         return self.repository.get_all_resources_by_club(club_id)
 
-    def get_ranking_by_resource(self, resource_id: int, club_id: int):
-        return self.repository.get_ranking_by_resource(resource_id, club_id)
+    def get_ranking_by_resource(self, resource_id: int):
+        return self.repository.get_resource_ranking(resource_id)
 
     def delete_resource(self, resource_id: int):
         return self.repository.delete_resource(resource_id)

@@ -11,6 +11,7 @@ class ResourceRepository:
         self.resources = get_table('reading_resources')
         self.quiz_results = get_table('quiz_results')
         self.quizzes = get_table('quizzez')
+        self.users = get_table('users')
 
     def _get_db(self) -> Session:
         db = next(get_db())
@@ -93,27 +94,35 @@ class ResourceRepository:
         finally:
             db.close()
 
-    # Método para obtener el ranking de miembros por recurso de lectura según el score en la tabla quiz_results usando id_resource para buscar el id_quiz de ese recurso en la tabla quizzez y luego buscar el score en la tabla quiz_results usando ese id_quiz
-    def get_ranking_by_resource(self, resource_id: int, club_id: int):
+    def get_resource_ranking(self, id_resource: int):
         db = self._get_db()
         try:
-            query = self.quizzes.select().where(self.quizzes.c.id_reading_resource == resource_id)
+            # Query para obtener los resultados de los quizzes asociados al recurso, incluyendo el nombre de usuario
+            query = self.quiz_results.select().join(
+                self.quizzes, self.quiz_results.c.id_quiz == self.quizzes.c.id_quiz
+            ).join(
+                self.users, self.quiz_results.c.id_user == self.users.c.id_user
+                # Join con la tabla users para obtener el user_name
+            ).where(
+                and_(
+                    self.quizzes.c.id_reading_resource == id_resource  # Solo resultados válidos con puntajes positivos
+                )
+            ).order_by(self.quiz_results.c.score.desc())  # Orden por puntaje descendente para ranking
+
             result = db.execute(query)
-            quiz = result.fetchone()
-            if quiz is None:
-                raise HTTPException(status_code=404, detail="Quiz not found")
-            else:
-                query_res = self.quiz_results.select().where(and_(self.quiz_results.c.id_quiz == quiz.id_quiz,
-                                                                  self.quiz_results.c.id_club == club_id)
-                                                             ).order_by(self.quiz_results.c.score.desc())
-                result_res = db.execute(query_res)
-                quiz_results = result_res.fetchall()
-                return QuizResult(**quiz_results[0]._asdict())
-        except HTTPException as http_exc:
-            # Permitir que las excepciones HTTP pasen tal como son (404, etc.)
-            raise http_exc
+            rankings = result.fetchall()
+
+            # Construimos una lista de diccionarios con los resultados del ranking
+            return [
+                {
+                    "id_user": ranking.id_user,
+                    "user_name": ranking.user_name,
+                    "score": ranking.score
+                }
+                for ranking in rankings
+            ]
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"DB Error while getting ranking by resource: {e}")
+            raise HTTPException(status_code=500, detail=f"DB Error while getting resource ranking: {e}")
         finally:
             db.close()
 
