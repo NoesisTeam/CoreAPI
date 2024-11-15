@@ -1,3 +1,4 @@
+import json
 from fastapi import HTTPException
 from repositories.quiz_repository import QuizRepository
 import requests
@@ -55,7 +56,7 @@ def process_quiz_data(quiz: dict):
         "quantity_questions": len(questions)
     }
 
-    return processed_quiz
+    return json.load(processed_quiz)
 
 class QuizService:
     def __init__(self):
