@@ -69,7 +69,8 @@ class QuizService:
         # Si no existe el quiz en la base de datos, se obtiene de la IA_API
         else:
             quiz = self.get_data(resource_id)
-            return self.quiz_repository.save_quiz(resource_id, quiz)
+            self.quiz_repository.save_quiz(resource_id, quiz)
+            return quiz
 
     def get_data(self, resource_id: int):
         try:
