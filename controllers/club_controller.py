@@ -131,7 +131,7 @@ async def upload_resource(title: str = Form(...),
 async def get_resource(resource_id: int):
     return resource_service.get_resource_url(resource_id)
 
-@club_router.delete("/delete/resources/{resource_id}")
+@club_router.patch("/delete/resources/{resource_id}")
 async def delete_resource(resource_id: int, token: dict = Depends(get_token_club)):
     if validate_founder_role(token.get("role")):
         resource_service.delete_resource(resource_id)
@@ -169,7 +169,7 @@ async def get_ranking_by_resource(resource_id: int, token: dict = Depends(get_to
     return resource_service.get_ranking_by_resource(resource_id)
 
 #Soon........
-@club_router.delete("/membership/leave")
+@club_router.put("/membership/leave")
 async def leave_club():
     if not club_service.leave_club:
         raise HTTPException(status_code=400, detail="Error while leaving club")
