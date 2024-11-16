@@ -18,6 +18,7 @@ class QuizRepository:
 
     def get_quiz(self, resource_id: int):
         db = self._get_db()
+        print(f"Resource ID: {resource_id}")
         try:
             query = self.quizzes.select().where(self.quizzes.c.id_reading_resource == resource_id)
             result = db.execute(query)

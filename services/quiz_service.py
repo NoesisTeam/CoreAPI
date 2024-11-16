@@ -84,16 +84,18 @@ class QuizService:
             url = settings.AI_API_URL # URL de la API externa
             headers = {
                 "Content-Type": "application/json"  # Establece el tipo de contenido a JSON
+
             }
             data_sent = {
                 "resource_url": self.resource_service.get_resource_url(resource_id) # URL del recurso
             }
             response = requests.post(url, headers=headers, json=data_sent)  # Envía el 'data' en formato JSON
             data_quiz = response.json()  # Obtiene el JSON de la respuesta
+            print(data_sent)
             # Verifica la respuesta
             if response.status_code != 200:
                 raise HTTPException(status_code=response.status_code,
-                                    detail="Error while getting quiz from AI_API")
+                                    detail="Error while getting quiz from AI_API" + str(data_quiz))
 
             # Verifica que la estructura del JSON sea la esperada
             # if "questions" not in data_quiz or "answers" not in data_quiz:
