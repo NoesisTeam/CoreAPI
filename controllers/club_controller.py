@@ -156,7 +156,7 @@ async def get_quiz(resource_id: int, token: dict = Depends(get_token_club)):
 @club_router.put("/regenerate/resources/quiz/{resource_id}")
 async def regenerate_quiz(resource_id: int, token: dict = Depends(get_token_club)):
     if not validate_founder_role(token.get("role")):
-        raise HTTPException(status_code=401, detail="You are not authorized to update this quiz")
+        raise HTTPException(status_code=401, detail="You are not authorized to regenerate this quiz")
     return quiz_service.regen_quiz(resource_id)
 
 @club_router.get("/ranking")

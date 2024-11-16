@@ -79,6 +79,7 @@ class QuizService:
             return quiz
 
     def get_data(self, resource_id: int):
+
         try:
 
             url = settings.AI_API_URL # URL de la API externa
@@ -98,8 +99,8 @@ class QuizService:
                                     detail="Error while getting quiz from AI_API" + str(data_quiz))
 
             # Verifica que la estructura del JSON sea la esperada
-            # if "questions" not in data_quiz or "answers" not in data_quiz:
-            #     raise HTTPException(status_code=500, detail="IA_API response ededede not valid")
+            if "questions" not in data_quiz or "answers" not in data_quiz:
+                raise HTTPException(status_code=500, detail="IA_API response not valid")
             return process_quiz_data(data_quiz) # Retorna el JSON con la estructura obtenida
 
 
