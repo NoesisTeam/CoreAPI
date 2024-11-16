@@ -59,7 +59,7 @@ def process_quiz_data(quiz_json):
         "quantity_questions": len(questions)
     }
 
-    return processed_quiz
+    return json.load(processed_quiz)
 
 
 
