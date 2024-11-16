@@ -33,6 +33,7 @@ class QuizRepository:
 
     def save_quiz(self, resource_id: int, quiz: dict):
         db = self._get_db()
+        print(f"quiz: {quiz}")
         try:
             # Convertir listas a cadenas JSON sin codificación Unicode
             questions_json = json.dumps(quiz.get('questions'), ensure_ascii=False)
