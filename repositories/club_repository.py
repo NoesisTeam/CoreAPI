@@ -31,8 +31,6 @@ class ClubRepository:
             result = db.execute(query)
             db.commit()
             id_club = result.lastrowid
-            print(id_club)
-            print(newclub.id_user, newclub.club_name, newclub.club_desc, newclub.is_private, newclub.is_academic, club_code)
             self.add_founder_to_club(id_club, newclub.id_user)
             return True
         except Exception as e:
