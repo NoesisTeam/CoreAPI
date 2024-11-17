@@ -146,9 +146,9 @@ async def get_all_resources_by_club(token: dict = Depends(get_token_club)):
 @club_router.get("/get/resources/quiz/{resource_id}")
 async def get_quiz(resource_id: int, token: dict = Depends(get_token_club)):
     if validate_founder_role(token.get("role")):
-        return quiz_service.get_quiz(resource_id)
+        return quiz_service.get_quiz(resource_id, token.get("user"))
     if token.get("role") == "Member":
-        return quiz_service.get_quiz_member(resource_id)
+        return quiz_service.get_quiz_from_db_for_members(resource_id)
     else:
         raise HTTPException(status_code=400, detail="Quiz does not exist or you are not authorized to view it")
 
@@ -157,7 +157,7 @@ async def get_quiz(resource_id: int, token: dict = Depends(get_token_club)):
 async def regenerate_quiz(resource_id: int, token: dict = Depends(get_token_club)):
     if not validate_founder_role(token.get("role")):
         raise HTTPException(status_code=401, detail="You are not authorized to regenerate this quiz")
-    return quiz_service.regen_quiz(resource_id)
+    return quiz_service.regen_quiz(resource_id, token.get("user"))
 
 @club_router.get("/ranking")
 async def get_ranking(token: dict = Depends(get_token_club)):

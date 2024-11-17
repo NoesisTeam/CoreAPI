@@ -12,8 +12,11 @@ settings = get_settings()
 
 import json
 
+import json
+
 def process_quiz_data(quiz_json):
     try:
+        # Cargar el JSON si es un string
         if isinstance(quiz_json, str):
             quiz = json.loads(quiz_json)
         else:
@@ -21,7 +24,7 @@ def process_quiz_data(quiz_json):
 
         # Verificar que el formato de quiz es correcto
         if not all(key in quiz for key in ["questions", "options", "answers"]):
-            raise ValueError("El JSON debe contener las claves 'questions', 'options' y 'answers'.")
+            raise ValueError("JSON does not have the required keys")
 
         # Inicializar estructuras de datos
         questions = []
@@ -31,54 +34,41 @@ def process_quiz_data(quiz_json):
         # Procesar preguntas
         for question_text in quiz["questions"]:
             if not isinstance(question_text, str):
-                raise ValueError(f"Las preguntas deben ser cadenas. Encontrado: {type(question_text)}")
+                raise ValueError(f"Questions must be strings. Got: {type(question_text)}")
             # Extraer el texto de la pregunta eliminando el número y el punto
             question_text_only = question_text.split(" ", 1)[1].strip()
             questions.append({"question": question_text_only})
 
-        # Procesar opciones
-        for option_set in quiz["options"]:
-            if "options" not in option_set:
-                raise ValueError("Cada conjunto de opciones debe tener una clave 'options'.")
-            options_text = option_set["options"]
-            if not isinstance(options_text, str):
-                raise ValueError(f"Las opciones deben ser cadenas. Encontrado: {type(options_text)}")
+        # Procesar opciones (4 opciones por pregunta)
+        options = quiz["options"]
+        if len(options) % 4 != 0:
+            raise ValueError("Number of options is not multiple of 4")
 
-            options = {
-                "A": None,
-                "B": None,
-                "C": None,
-                "D": None
-            }
-            # Extraer cada opción
-            if "A-" in options_text:
-                options["A"] = "A-" + options_text.split("A-")[1].split("B-")[0].strip()
-            if "B-" in options_text:
-                options["B"] = "B-" + options_text.split("B-")[1].split("C-")[0].strip()
-            if "C-" in options_text:
-                options["C"] = "C-" + options_text.split("C-")[1].split("D-")[0].strip()
-            if "D-" in options_text:
-                options["D"] = "D-" + options_text.split("D-")[1].strip()
-            all_answers.append([options["A"], options["B"], options["C"], options["D"]])
+        for i in range(0, len(options), 4):
+            option_set = options[i:i+4]
+            # Guardar las opciones agrupadas
+            all_answers.append([opt.split("-", 1)[1].strip() for opt in option_set])
 
         # Procesar respuestas correctas
-        for answer in quiz["answers"]:
-            if "answer" not in answer:
-                raise ValueError("Cada respuesta debe tener una clave 'answer'.")
-            correct_answers.append(answer["answer"])
+        correct_answers = quiz["answers"]
+
+        # Verificar consistencia
+        if len(questions) != len(all_answers) or len(questions) != len(correct_answers):
+            raise ValueError("Quantities of questions, options and answers are not the same.")
 
         # Estructurar el diccionario final
         processed_quiz = {
             "questions": questions,
-            "answers": all_answers,
-            "correct_answers": correct_answers,
+            "options": all_answers,
+            "answers": correct_answers,
             "quantity_questions": len(questions)
         }
         print(processed_quiz)
-
         return processed_quiz
+
     except Exception as e:
         return {"error": str(e)}
+
 
 
 
@@ -88,17 +78,17 @@ class QuizService:
         self.quiz_repository = QuizRepository()
         self.resource_service = ResourceService()
 
-    def get_quiz(self, resource_id: int):
+    def get_quiz(self, resource_id: int, id_user: int):
         if self.quiz_repository.quiz_exists(resource_id):
-            data = self.quiz_repository.get_quiz(resource_id)
-            return data
+            return self.quiz_repository.get_quiz(resource_id)
+
         # Si no existe el quiz en la base de datos, se obtiene de la IA_API
         else:
-            quiz = self.get_data(resource_id)
+            quiz = self.get_data(resource_id, id_user)
             self.quiz_repository.save_quiz(resource_id, quiz)
-            return quiz
+            return self.get_quiz_from_db_for_founder(resource_id)
 
-    def get_data(self, resource_id: int):
+    def get_data(self, resource_id: int, id_user: int):
 
         try:
 
@@ -108,7 +98,8 @@ class QuizService:
 
             }
             data_sent = {
-                "resource_url": self.resource_service.get_resource_url(resource_id) # URL del recurso
+                "resource_url": self.resource_service.get_resource_url(resource_id), # URL del recurso
+                "id_user": id_user  # ID del usuario
             }
             response = requests.post(url, headers=headers, json=data_sent)  # Envía el 'data' en formato JSON
             data_quiz = response.json()  # Obtiene el JSON de la respuesta
@@ -141,14 +132,20 @@ class QuizService:
 
         return True
 
-    def get_quiz_member(self, resource_id: int):
+    def get_quiz_from_db_for_founder(self, resource_id: int):
         if not self.quiz_repository.quiz_exists(resource_id):
             raise HTTPException(status_code=404, detail="Quiz not found")
         return self.quiz_repository.get_quiz(resource_id)
-    def regen_quiz(self, resource_id: int):
-        quiz = self.get_data(resource_id)
+
+    def get_quiz_from_db_for_members(self, resource_id: int):
+        if not self.quiz_repository.quiz_exists(resource_id):
+            raise HTTPException(status_code=404, detail="Quiz not found")
+        return self.quiz_repository.get_quiz_from_db_for_members(resource_id)
+
+    def regen_quiz(self, resource_id: int, id_user: int):
+        quiz = self.get_data(resource_id, id_user)
         self.quiz_repository.regen_quiz(resource_id, quiz)
-        return quiz
+        return self.get_quiz_from_db_for_founder(resource_id)
 
 
 

@@ -99,6 +99,14 @@ class ResourceDB(Base):
     id_reading_resource = Column(Integer, primary_key=True, index=True)
     resource_status = Column(String(1))
 
+class QuizMember(BaseModel):
+    id_quiz: int
+    questions: str
+    answers: str
+    quantity_questions: int
+    minutes_to_answer: int
+    id_reading_resource: int
+
 class QuizDB(Base):
     __tablename__ = "quizzez"
 
