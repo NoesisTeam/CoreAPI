@@ -63,8 +63,8 @@ class QuizRepository:
         try:
             # Convertir listas a cadenas JSON sin codificación Unicode
             questions_json = json.dumps(quiz.get('questions'), ensure_ascii=False)
-            answers_json = json.dumps(quiz.get('answers'), ensure_ascii=False)
-            correct_answers_json = json.dumps(quiz.get('correct_answers'), ensure_ascii=False)
+            answers_json = json.dumps(quiz.get('options'), ensure_ascii=False)
+            correct_answers_json = json.dumps(quiz.get('answers'), ensure_ascii=False)
 
             query = self.quizzes.update().where(and_(self.quizzes.c.id_reading_resource == resource_id,
                                                      self.quizzes.c.id_quiz == id_quiz)).values(
