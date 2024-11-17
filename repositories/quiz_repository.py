@@ -45,7 +45,7 @@ class QuizRepository:
                 answers=answers_json,
                 correct_answers=correct_answers_json,
                 quantity_questions=quiz.get('quantity_questions'),
-                minutes_to_answer=5,
+                minutes_to_answer=quiz.get('minutes_to_answer'),
                 id_reading_resource=resource_id
             )
             db.execute(query)
