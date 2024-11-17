@@ -78,7 +78,7 @@ class QuizService:
         self.quiz_repository = QuizRepository()
         self.resource_service = ResourceService()
 
-    def get_quiz(self, resource_id: int, id_user: int):
+    def get_quiz(self, resource_id: int, id_user: str):
         if self.quiz_repository.quiz_exists(resource_id):
             return self.quiz_repository.get_quiz(resource_id)
 
@@ -88,7 +88,7 @@ class QuizService:
             self.quiz_repository.save_quiz(resource_id, quiz)
             return self.get_quiz_from_db_for_founder(resource_id)
 
-    def get_data(self, resource_id: int, id_user: int):
+    def get_data(self, resource_id: int, id_user: str):
 
         try:
 
@@ -142,7 +142,7 @@ class QuizService:
             raise HTTPException(status_code=404, detail="Quiz not found")
         return self.quiz_repository.get_quiz_from_db_for_members(resource_id)
 
-    def regen_quiz(self, resource_id: int, id_user: int):
+    def regen_quiz(self, resource_id: int, id_user: str):
         quiz = self.get_data(resource_id, id_user)
         self.quiz_repository.regen_quiz(resource_id, quiz)
         return self.get_quiz_from_db_for_founder(resource_id)
