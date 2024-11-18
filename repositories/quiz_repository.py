@@ -71,7 +71,8 @@ class QuizRepository:
                 questions=questions_json,
                 answers=answers_json,
                 correct_answers=correct_answers_json,
-                quantity_questions=quiz.get('quantity_questions')
+                quantity_questions=quiz.get('quantity_questions'),
+                minutes_to_answer=quiz.get('quantity_questions')
             )
             db.execute(query)
             db.commit()
