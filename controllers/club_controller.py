@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 
-from models.responses import NewClub, UpdateClub, NewParticipant, UserID, ResourceToUpload
+from models.responses import NewClub, UpdateClub, NewParticipant, UserID, ResourceToUpload, QuizSubmit
 from services import quiz_service
 from services.club_service import ClubService, get_token_club
 from services.quiz_service import QuizService
@@ -158,6 +158,13 @@ async def regenerate_quiz(resource_id: int, token: dict = Depends(get_token_club
     if not validate_founder_role(token.get("role")):
         raise HTTPException(status_code=401, detail="You are not authorized to regenerate this quiz")
     return quiz_service.regen_quiz(resource_id, str(token.get("user")))
+
+@club_router.post("/submit/quiz")
+async def submit_quiz(quiz_submit: QuizSubmit, token: dict = Depends(get_token_club)):
+    if token.get("role") == "Member":
+        return quiz_service.submit_quiz(quiz_submit, token.get("user"), token.get("club"), id_role=2)
+    else:
+        raise HTTPException(status_code=401, detail="Only members can submit quizzes")
 
 @club_router.get("/ranking")
 async def get_ranking(token: dict = Depends(get_token_club)):

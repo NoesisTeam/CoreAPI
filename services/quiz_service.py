@@ -1,5 +1,9 @@
 import json
+from typing import List
+
 from fastapi import HTTPException
+
+from models.responses import QuizSubmit
 from repositories.quiz_repository import QuizRepository
 import requests
 from core.app_settings import get_settings
@@ -140,12 +144,51 @@ class QuizService:
     def get_quiz_from_db_for_members(self, resource_id: int):
         if not self.quiz_repository.quiz_exists(resource_id):
             raise HTTPException(status_code=404, detail="Quiz not found")
-        return self.quiz_repository.get_quiz_from_db_for_members(resource_id)
+        return self.quiz_repository.get_quiz(resource_id).id_quiz
+
+
 
     def regen_quiz(self, resource_id: int, id_user: str):
         quiz = self.get_data(resource_id, id_user)
         self.quiz_repository.regen_quiz(resource_id, quiz)
         return self.get_quiz_from_db_for_founder(resource_id)
+
+
+
+    def submit_quiz(self, quiz_submit: QuizSubmit, id_user: int, id_club: int, id_role: int):
+        correct_quiz = self.quiz_repository.get_items_quiz(quiz_submit.id_quiz)
+        if not self.quiz_repository.is_quiz_answered(id_user, id_club, quiz_submit.id_quiz):
+            correct_answers = correct_quiz.correct_answers
+            score, answered_correctly = self.calculate_score(quiz_submit, correct_quiz)
+            return self.quiz_repository.submit_quiz(score,
+                                                    correct_answers,
+                                                    quiz_submit.time_spent,
+                                                    answered_correctly,
+                                                    quiz_submit.id_quiz,
+                                                    id_user, id_club, id_role)
+        else:
+            return self.quiz_repository.get_quiz_results(id_user, id_club, quiz_submit.id_quiz, correct_quiz.correct_answers)
+
+
+    def calculate_score(self, quiz_submit: QuizSubmit, correct_quiz):
+        score = 0
+        answered_correctly: List[bool] = []
+        total_time = correct_quiz.minutes_to_answer * 60
+        for i in range(correct_quiz.quantity_questions):
+            if quiz_submit.answers[i] == correct_quiz.correct_answers[i]:
+                answered_correctly.append(True)
+                score += 1
+            else:
+                answered_correctly.append(False)
+        if quiz_submit.time_spent <= total_time*0.25:
+            score *= 1.3
+        elif quiz_submit.time_spent <= total_time*0.5:
+            score *= 1.2
+        elif quiz_submit.time_spent <= total_time*0.75:
+            score *= 1.1
+        else:
+            score *= 1.0
+        return score, answered_correctly
 
 
 

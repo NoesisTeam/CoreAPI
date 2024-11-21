@@ -1,3 +1,5 @@
+from typing import List
+
 from pydantic import BaseModel
 from sqlalchemy import Column, Integer, String, Boolean, DECIMAL, Float
 from sqlalchemy.ext.declarative import declarative_base
@@ -84,6 +86,21 @@ class ClubParticipant(Base):
     nickname = Column(String(50))
     total_score = Column(DECIMAL(10,3))
     participant_status = Column(String(1))
+
+class QuizSubmit(BaseModel):
+    id_quiz: int
+    answers: List[str]
+    time_spent: int
+
+class QuizCompare(BaseModel):
+    correct_answers: List[str]
+    minutes_to_answer: int
+    quantity_questions: int
+
+class QuizResponse(BaseModel):
+    correct_answers: List[str]
+    score: float
+    quantity_correct_answers: int
 
 
 class ResourceDB(Base):
