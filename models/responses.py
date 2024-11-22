@@ -135,10 +135,24 @@ class QuizDB(Base):
     minutes_to_answer = Column(Integer)
     id_reading_resource = Column(Integer)
 
-class Ranking(BaseModel):
+class ClubRanking(BaseModel):
     id_user: int
     user_name: str
     total_score: float
+
+class ResourceRanking(BaseModel):
+    id_user: int
+    user_name: str
+    score: float
+
+class MedalsByClub(BaseModel):
+    medal_type_name: str
+    medal_q_name: str
+
+class MedalsByUser(BaseModel):
+    medal_type_name: str
+    medal_q_name: str
+    quantity: int
 
 class QuizResult(Base):
     __tablename__ = "quiz_results"

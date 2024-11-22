@@ -2,8 +2,11 @@ from typing import Optional
 from fastapi import HTTPException, Depends
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.functions import count
+
 from core.database import get_table, get_db
-from models.responses import NewClub, UpdateClub, Club, ClubRequest, ClubParticipant, Ranking
+from models.responses import NewClub, UpdateClub, Club, ClubRequest, ClubParticipant, ClubRanking, MedalsByUser, \
+    MedalsByClub
 
 
 class ClubRepository:
@@ -13,6 +16,9 @@ class ClubRepository:
         self.participants_table = get_table('participant_role_club')  # Obtiene la tabla de participantes de un club
         self.club_requests_table = get_table('club_requests')  # Obtiene la tabla de solicitudes de membresía
         self.users_table = get_table('users')  # Obtiene la tabla de usuarios
+        self.medals_awarded = get_table('medals_awarded')  # Obtiene la tabla de medallas otorgadas
+        self.medal_qualities = get_table('medal_qualities')  # Obtiene la tabla de calidades de medallas
+        self.medal_types = get_table('medal_types')  # Obtiene la tabla de tipos de medallas
 
     def _get_db(self) -> Session:
         db = next(get_db())  # Obtiene la sesión usando el generador
@@ -338,12 +344,63 @@ class ClubRepository:
             ).order_by(self.participants_table.c.total_score.desc())
             result = db.execute(query)
             participants = result.fetchall()
-            return [Ranking(**participant._asdict()) for participant in participants]
+            return [ClubRanking(**participant._asdict()) for participant in participants]
         except Exception as e:
             raise HTTPException(status_code=500, detail="DB Error while getting club ranking" + str(e))
         finally:
             db.close()
 
+    def get_member_medals_by_club(self, club_id: int, user_id: int):
+        db = self._get_db()
+        try:
+            query = self.medals_awarded.join(
+                self.medal_qualities,
+                self.medals_awarded.c.id_medal_quality == self.medal_qualities.c.id_medal_quality
+            ).join(
+                self.medal_types,
+                self.medal_qualities.c.id_medal_type == self.medal_types.c.id_medal_type
+            ).select().with_only_columns(
+                self.medal_qualities.c.medal_q_name,
+                self.medal_types.c.medal_type_name
+            ).where(
+                and_(
+                    self.medals_awarded.c.id_club == club_id,
+                    self.medals_awarded.c.id_user == user_id
+                )
+            )
+            result = db.execute(query)
+            medals = result.fetchall()
+            print(medals)
+            return [MedalsByClub(**medal._asdict()) for medal in medals]
+        except Exception as e:
+            raise HTTPException(status_code=500, detail="DB Error while getting member medals by club" + str(e))
+        finally:
+            db.close()
+    def get_user_medals(self, id_user: int):
+        db = self._get_db()
+        try:
+            query = self.medals_awarded.join(
+                self.medal_qualities,
+                self.medals_awarded.c.id_medal_quality == self.medal_qualities.c.id_medal_quality
+            ).join(
+                self.medal_types,
+                self.medal_qualities.c.id_medal_type == self.medal_types.c.id_medal_type
+            ).select().with_only_columns(
+                self.medal_qualities.c.medal_q_name,
+                self.medal_types.c.medal_type_name,
+                count(self.medals_awarded.c.id_medal_quality).label('quantity')
+            ).where(
+                self.medals_awarded.c.id_user == id_user
+            ).group_by(
+                self.medals_awarded.c.id_medal_quality
+            )
+            result = db.execute(query)
+            medals = result.fetchall()
+            return [MedalsByUser(**medal._asdict()) for medal in medals]
+        except Exception as e:
+            raise HTTPException(status_code=500, detail="DB Error while getting user medals" + str(e))
+        finally:
+            db.close()
     def remove_member(self, club_id: int, user_id: int):
         db = self._get_db()
         try:

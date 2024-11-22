@@ -2,7 +2,7 @@ from fastapi import HTTPException, Depends
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
 from core.database import get_table, get_db
-from models.responses import ResourceToUpload, ResourceDB, ResourceResponse, QuizResult, Ranking
+from models.responses import ResourceToUpload, ResourceDB, ResourceResponse, QuizResult, ClubRanking, ResourceRanking
 
 
 class ResourceRepository:
@@ -115,13 +115,14 @@ class ResourceRepository:
             ).select().where(
                 and_(
                     self.quizzes.c.id_reading_resource == id_resource,  # Solo los quizzes asociados al recurso
+
                     self.participants_table.c.participant_status == 'A'  # Solo participantes activos
                 )
             ).order_by(self.quiz_results.c.score.desc())  # Ordenar por el puntaje del quiz
 
             result = db.execute(query)
             quiz_results = result.fetchall()
-            return [Ranking(**quiz._asdict()) for quiz in quiz_results]
+            return [ResourceRanking(**quiz._asdict()) for quiz in quiz_results]
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"DB Error while getting resource ranking: {e}")
         finally:

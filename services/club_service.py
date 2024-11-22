@@ -17,20 +17,7 @@ ALGORITHM = settings.ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="access_token")
-# def get_token_club(token: str = Depends(oauth2_scheme)) -> str:
-#     credentials_exception = HTTPException(
-#         status_code=status.HTTP_401_UNAUTHORIZED,
-#         detail="Wrong credentials, not authorized",
-#         headers={"WWW-Authenticate": "Bearer"},
-#     )
-#     try:
-#         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-#         role_name: str = payload.get("role")
-#         if role_name is None:
-#             raise credentials_exception
-#     except JWTError:
-#         raise credentials_exception
-#     return role_name
+
 def get_token_club(token: str = Depends(oauth2_scheme)) -> dict:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -114,6 +101,12 @@ class ClubService:
 
     def get_club_by_code(self, club_code: str):
         return self.repository.get_club(club_code)
+
+    def get_member_medals_by_club(self, club_id: int, user_id: int):
+        return self.repository.get_member_medals_by_club(club_id, user_id)
+
+    def get_user_medals(self, user_id: int):
+        return self.repository.get_user_medals(user_id)
 
     def get_all_clubs(self, user_id: int):
         return self.repository.get_all_clubs(user_id)

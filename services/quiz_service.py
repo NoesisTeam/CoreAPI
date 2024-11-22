@@ -144,7 +144,7 @@ class QuizService:
     def get_quiz_from_db_for_members(self, resource_id: int):
         if not self.quiz_repository.quiz_exists(resource_id):
             raise HTTPException(status_code=404, detail="Quiz not found")
-        return self.quiz_repository.get_quiz(resource_id)
+        return self.quiz_repository.get_quiz_from_db_for_members(resource_id)
 
 
 

@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 
 from models.responses import NewClub, UpdateClub, NewParticipant, UserID, ResourceToUpload, QuizSubmit
-from services import quiz_service
 from services.club_service import ClubService, get_token_club
 from services.quiz_service import QuizService
 from services.resource_service import ResourceService
@@ -166,9 +165,17 @@ async def submit_quiz(quiz_submit: QuizSubmit, token: dict = Depends(get_token_c
     else:
         raise HTTPException(status_code=401, detail="Only members can submit quizzes")
 
+
+@club_router.get("/get/member/medals")
+async def get_member_medals_by_club(token: dict = Depends(get_token_club)):
+    return club_service.get_member_medals_by_club(token.get("club"), token.get("user"))
+
+@club_router.get("/get/user/medals/{user_id}")
+async def get_user_medals(user_id: int):
+    return club_service.get_user_medals(user_id)
+
 @club_router.get("/ranking")
 async def get_ranking(token: dict = Depends(get_token_club)):
-    print(token.get("club"))
     return club_service.get_club_ranking(token.get("club"))
 
 @club_router.get("/get/resources/ranking/{resource_id}")
