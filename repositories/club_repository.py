@@ -477,7 +477,7 @@ class ClubRepository:
             user = result.fetchone()
             if user is None:
                 raise HTTPException(status_code=404, detail="User not found")
-            if user.real_name is None or user.phone_number is None or user.semester is None or user.id_career is None:
+            if user.real_name is None or user.phone_number is None or user.semester is None or user.id_career is None or user.sex is None:
                 return JSONResponse(status_code=400, content={"complete": False})
             return JSONResponse(status_code=200, content={"complete": True})
         except Exception as e:
