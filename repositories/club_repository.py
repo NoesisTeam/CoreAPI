@@ -3,6 +3,7 @@ from fastapi import HTTPException, Depends
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.functions import count
+from starlette.responses import JSONResponse
 
 from core.database import get_table, get_db
 from models.responses import NewClub, UpdateClub, Club, ClubRequest, ClubParticipant, ClubRanking, MedalsByUser, \
@@ -477,8 +478,8 @@ class ClubRepository:
             if user is None:
                 raise HTTPException(status_code=404, detail="User not found")
             if user.real_name is None or user.phone_number is None or user.semester is None or user.id_career is None:
-                return False
-            return True
+                return JSONResponse(status_code=400, content={"complete": False})
+            return JSONResponse(status_code=200, content={"complete": True})
         except Exception as e:
             raise HTTPException(status_code=400, detail="DB Error while checking user info" + str(e))
         finally:
