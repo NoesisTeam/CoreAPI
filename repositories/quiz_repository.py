@@ -159,7 +159,7 @@ class QuizRepository:
             if quiz is None:
                 raise HTTPException(status_code=404, detail="Quiz result not found")
             return QuizResponse(correct_answers=correct_answers,
-                                score=quiz.score,
+                                score=self.truncate_float(quiz.score, 3),
                                 quantity_correct_answers=quiz.quantity_correct_answers)
 
         except Exception as e:
@@ -181,10 +181,14 @@ class QuizRepository:
             db.execute(query)
             db.commit()
             return QuizResponse(correct_answers=correct_answers,
-                                score=score,
+                                score=self.truncate_float(score, 3),
                                 quantity_correct_answers=answer_correctly.count(True))
         except Exception as e:
             db.rollback()
             raise HTTPException(status_code=500, detail=f"DB Error while submitting quiz: {e}")
         finally:
             db.close()
+
+    def truncate_float(self, value: float, decimals: int) -> float:
+        factor = 10 ** decimals
+        return int(value * factor) / factor
