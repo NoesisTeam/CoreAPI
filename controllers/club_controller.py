@@ -182,7 +182,7 @@ async def get_ranking(token: dict = Depends(get_token_club)):
 async def get_ranking_by_resource(resource_id: int, token: dict = Depends(get_token_club)):
     return resource_service.get_ranking_by_resource(resource_id)
 
-@club_router.get("/get/user/profile")
+@club_router.get("/get/user/profile/{user_id}")
 async def get_user_profile(user_id: int):
     return club_service.get_user_profile(user_id)
 
