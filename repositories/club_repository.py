@@ -110,10 +110,14 @@ class ClubRepository:
     def get_founded_clubs(self, id_user: int):
         db = self._get_db()
         try:
-            query = self.participants_table.select().where(
+            query = self.participants_table.join(
+                self.clubs_table,
+                self.participants_table.c.id_club == self.clubs_table.c.id_club
+            ).select().where(
                 and_(
                     self.participants_table.c.id_user == id_user,
-                    self.participants_table.c.id_role == 1
+                    self.participants_table.c.id_role == 1,
+                    self.clubs_table.c.club_status == 'A'
                 )
             )
             result = db.execute(query)
@@ -128,10 +132,14 @@ class ClubRepository:
     def get_joined_clubs(self, id_user: int):
         db = self._get_db()
         try:
-            query = self.participants_table.select().where(
+            query = self.participants_table.join(
+                self.clubs_table,
+                self.participants_table.c.id_club == self.clubs_table.c.id_club
+            ).select().where(
                 and_(
                     self.participants_table.c.id_user == id_user,
-                    self.participants_table.c.id_role == 2
+                    self.participants_table.c.id_role == 2,
+                    self.clubs_table.c.club_status == 'A'
                 )
             )
             result = db.execute(query)
@@ -294,12 +302,15 @@ class ClubRepository:
             query = self.club_requests_table.update().where(
                 and_(
                     self.club_requests_table.c.id_club == club_id,
-                    self.club_requests_table.c.id_user == user_id
+                    self.club_requests_table.c.id_user == user_id,
+                    self.club_requests_table.c.id_request_status == 2
                 )
             ).values(
                 id_request_status=1
             )
-            db.execute(query)
+            result = db.execute(query)
+            if result.rowcount == 0:  # rowcount indica el número de filas afectadas
+                raise HTTPException(status_code=404, detail="Request is not pending")
             db.commit()
             self.add_member(club_id, user_id)
             return True
@@ -315,12 +326,15 @@ class ClubRepository:
             query = self.club_requests_table.update().where(
                 and_(
                     self.club_requests_table.c.id_club == club_id,
-                    self.club_requests_table.c.id_user == user_id
+                    self.club_requests_table.c.id_user == user_id,
+                    self.club_requests_table.c.id_request_status == 2
                 )
             ).values(
                 id_request_status=3
             )
-            db.execute(query)
+            result = db.execute(query)
+            if result.rowcount == 0:  # rowcount indica el número de filas afectadas
+                raise HTTPException(status_code=404, detail="Request is not pending")
             db.commit()
             return True
         except Exception:
