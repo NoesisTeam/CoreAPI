@@ -183,16 +183,16 @@ async def get_ranking_by_resource(resource_id: int, token: dict = Depends(get_to
     return resource_service.get_ranking_by_resource(resource_id)
 
 @club_router.get("/get/user/profile")
-async def get_user_profile(user_id: UserID):
-    return club_service.get_user_profile(user_id.id_user)
+async def get_user_profile(user_id: int):
+    return club_service.get_user_profile(user_id)
 
 @club_router.post("/update/user/profile")
 async def update_user_profile(info: ProfileInfoUp):
     return club_service.update_user_profile(info)
 
-@club_router.get("/check/user/info")
-async def check_user_info(user_id: UserID):
-    return club_service.check_user_info(user_id.id_user)
+@club_router.get("/check/user/info/{user_id}")
+async def check_user_info(user_id: int):
+    return club_service.check_user_info(user_id)
 
 @club_router.get("/check/resources/quiz/{id_quiz}")
 async def check_quiz_answered(id_quiz: int, token: dict = Depends(get_token_club)):

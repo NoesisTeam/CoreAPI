@@ -152,7 +152,7 @@ class QuizService:
 
     def submit_quiz(self, quiz_submit: QuizSubmit, id_user: int, id_club: int, id_role: int):
         correct_quiz = self.quiz_repository.get_items_quiz(quiz_submit.id_quiz)
-        if not self.quiz_repository.is_quiz_answered(id_user, id_club, quiz_submit.id_quiz):
+        if not self.quiz_repository.is_quiz_answered(id_user, id_club, quiz_submit.id_quiz).get("answered"):
             correct_answers = correct_quiz.correct_answers
             score, answered_correctly = self.calculate_score(quiz_submit, correct_quiz)
             return self.quiz_repository.submit_quiz(score,

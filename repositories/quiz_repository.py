@@ -4,6 +4,8 @@ from typing import List
 from fastapi import Depends, HTTPException
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
+from starlette.responses import JSONResponse
+
 from core.database import get_db, get_table
 from models.responses import QuizDB, QuizMember, QuizCompare, QuizResponse
 
@@ -142,7 +144,7 @@ class QuizRepository:
                                                           self.quiz_results.c.id_quiz == id_quiz))
             result = db.execute(query)
             quiz = result.fetchone()
-            return quiz is not None
+            return JSONResponse(content={"answered": quiz is not None})
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"DB Error while checking quiz existence: {e}")
         finally:
