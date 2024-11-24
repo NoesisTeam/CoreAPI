@@ -1,20 +1,15 @@
-import json
 from typing import List
 
+import requests
 from fastapi import HTTPException
+from fastapi.responses import JSONResponse
 
+from core.app_settings import get_settings
 from models.responses import QuizSubmit
 from repositories.quiz_repository import QuizRepository
-import requests
-from core.app_settings import get_settings
 from services.resource_service import ResourceService
 
-
-
 settings = get_settings()
-
-
-import json
 
 import json
 
@@ -152,7 +147,7 @@ class QuizService:
 
     def submit_quiz(self, quiz_submit: QuizSubmit, id_user: int, id_club: int, id_role: int):
         correct_quiz = self.quiz_repository.get_items_quiz(quiz_submit.id_quiz)
-        if not self.quiz_repository.is_quiz_answered(id_user, id_club, quiz_submit.id_quiz).get("answered"):
+        if not self.quiz_repository.is_quiz_answered(id_user, id_club, quiz_submit.id_quiz):
             correct_answers = correct_quiz.correct_answers
             score, answered_correctly = self.calculate_score(quiz_submit, correct_quiz)
             return self.quiz_repository.submit_quiz(score,
@@ -165,7 +160,7 @@ class QuizService:
             return self.quiz_repository.get_quiz_results(id_user, id_club, quiz_submit.id_quiz, correct_quiz.correct_answers)
 
     def check_quiz_answered(self, id_quiz: int, id_club:int, id_user: int):
-        return self.quiz_repository.is_quiz_answered(id_user, id_club, id_quiz)
+        return JSONResponse(content={"answered": self.quiz_repository.is_quiz_answered(id_user, id_club, id_quiz)})
 
     def calculate_score(self, quiz_submit: QuizSubmit, correct_quiz):
         score = 0
