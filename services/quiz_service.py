@@ -126,7 +126,6 @@ class QuizService:
         except Exception as e:
             raise HTTPException(status_code=500, detail="Error while getting quiz from AI_API" + str(e))
 
-
     def is_validate_quiz_response(self, data_quiz):
         # Claves requeridas en la respuesta
         required_keys = ["questions", "options", "answers"]
@@ -146,14 +145,10 @@ class QuizService:
             raise HTTPException(status_code=404, detail="Quiz not found")
         return self.quiz_repository.get_quiz_from_db_for_members(resource_id)
 
-
-
     def regen_quiz(self, resource_id: int, id_user: str):
         quiz = self.get_data(resource_id, id_user)
         self.quiz_repository.regen_quiz(resource_id, quiz)
         return self.get_quiz_from_db_for_founder(resource_id)
-
-
 
     def submit_quiz(self, quiz_submit: QuizSubmit, id_user: int, id_club: int, id_role: int):
         correct_quiz = self.quiz_repository.get_items_quiz(quiz_submit.id_quiz)
@@ -169,6 +164,8 @@ class QuizService:
         else:
             return self.quiz_repository.get_quiz_results(id_user, id_club, quiz_submit.id_quiz, correct_quiz.correct_answers)
 
+    def check_quiz_answered(self, id_quiz: int, id_club:int, id_user: int):
+        return self.quiz_repository.is_quiz_answered(id_user, id_club, id_quiz)
 
     def calculate_score(self, quiz_submit: QuizSubmit, correct_quiz):
         score = 0

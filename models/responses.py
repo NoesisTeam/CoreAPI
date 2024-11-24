@@ -1,4 +1,5 @@
-from typing import List
+from decimal import Decimal
+from typing import List, Optional
 
 from pydantic import BaseModel
 from sqlalchemy import Column, Integer, String, Boolean, DECIMAL, Float
@@ -71,6 +72,26 @@ class ClubRequestResponse(BaseModel):
     id_request_status: int
     request_date: str
 
+class ProfileInfoUp(BaseModel):
+    id_user: int
+    real_name: str
+    phone_number: str
+    semester: int
+    id_career: int
+    sex: str
+
+class ProfileInfo(BaseModel):
+    user_name: str
+    real_name: Optional[str]
+    phone_number: Optional[str]
+    semester: Optional[int]
+    career_name: Optional[str]
+    sex: Optional[str]
+    global_score: Decimal
+
+class Career(BaseModel):
+    id_career: int
+    career_name: str
 
 class ClubParticipant(Base):
     __tablename__ = "club_participants"

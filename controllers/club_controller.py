@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 
-from models.responses import NewClub, UpdateClub, NewParticipant, UserID, ResourceToUpload, QuizSubmit
+from models.responses import NewClub, UpdateClub, NewParticipant, UserID, ResourceToUpload, QuizSubmit, ProfileInfoUp
 from services.club_service import ClubService, get_token_club
 from services.quiz_service import QuizService
 from services.resource_service import ResourceService
@@ -181,6 +181,26 @@ async def get_ranking(token: dict = Depends(get_token_club)):
 @club_router.get("/get/resources/ranking/{resource_id}")
 async def get_ranking_by_resource(resource_id: int, token: dict = Depends(get_token_club)):
     return resource_service.get_ranking_by_resource(resource_id)
+
+@club_router.get("/get/user/profile")
+async def get_user_profile(user_id: UserID):
+    return club_service.get_user_profile(user_id.id_user)
+
+@club_router.post("/update/user/profile")
+async def update_user_profile(info: ProfileInfoUp):
+    return club_service.update_user_profile(info)
+
+@club_router.get("/check/user/info")
+async def check_user_info(user_id: UserID):
+    return club_service.check_user_info(user_id.id_user)
+
+@club_router.get("/check/resources/quiz/{id_quiz}")
+async def check_quiz_answered(id_quiz: int, token: dict = Depends(get_token_club)):
+    return quiz_service.check_quiz_answered(id_quiz, token.get("club"), token.get("user"))
+
+@club_router.get("/get/careers/all")
+async def get_all_careers():
+    return club_service.get_all_careers()
 
 #Soon........
 @club_router.put("/membership/leave")

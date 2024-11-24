@@ -99,7 +99,6 @@ class QuizRepository:
         finally:
             db.close()
 
-
     #trae el quiz de la base de datos asociado al resource_id sin las respuestas correctas
     def get_quiz_from_db_for_members(self, resource_id: int):
         db = self._get_db()

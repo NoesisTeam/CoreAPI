@@ -7,7 +7,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 
 from core import app_settings
-from models.responses import NewClub, UpdateClub
+from models.responses import NewClub, UpdateClub, ProfileInfoUp
 from repositories.club_repository import ClubRepository
 
 settings = app_settings.get_settings()
@@ -108,5 +108,17 @@ class ClubService:
     def get_user_medals(self, user_id: int):
         return self.repository.get_user_medals(user_id)
 
+    def get_user_profile(self, user_id: int):
+        return self.repository.get_user_profile(user_id)
+
+    def update_user_profile(self, user_profile: ProfileInfoUp):
+        return self.repository.update_user_profile(user_profile)
+
+    def check_user_info(self, user_id: int):
+        return self.repository.check_user_info(user_id)
+
     def get_all_clubs(self, user_id: int):
         return self.repository.get_all_clubs(user_id)
+
+    def get_all_careers(self):
+        return self.repository.get_all_careers()

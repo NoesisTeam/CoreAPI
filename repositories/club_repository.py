@@ -6,7 +6,7 @@ from sqlalchemy.sql.functions import count
 
 from core.database import get_table, get_db
 from models.responses import NewClub, UpdateClub, Club, ClubRequest, ClubParticipant, ClubRanking, MedalsByUser, \
-    MedalsByClub
+    MedalsByClub, ProfileInfoUp, ProfileInfo, Career
 
 
 class ClubRepository:
@@ -19,6 +19,7 @@ class ClubRepository:
         self.medals_awarded = get_table('medals_awarded')  # Obtiene la tabla de medallas otorgadas
         self.medal_qualities = get_table('medal_qualities')  # Obtiene la tabla de calidades de medallas
         self.medal_types = get_table('medal_types')  # Obtiene la tabla de tipos de medallas
+        self.careers = get_table('careers')  # Obtiene la tabla de carreras
 
     def _get_db(self) -> Session:
         db = next(get_db())  # Obtiene la sesión usando el generador
@@ -376,6 +377,7 @@ class ClubRepository:
             raise HTTPException(status_code=500, detail="DB Error while getting member medals by club" + str(e))
         finally:
             db.close()
+
     def get_user_medals(self, id_user: int):
         db = self._get_db()
         try:
@@ -401,6 +403,85 @@ class ClubRepository:
             raise HTTPException(status_code=500, detail="DB Error while getting user medals" + str(e))
         finally:
             db.close()
+
+    #traer la info del usuario haciendo join con careers para obtener el career_name
+    def get_user_profile(self, user_id: int):
+        print(user_id)
+        db = self._get_db()
+        try:
+            # Usar un LEFT JOIN para manejar usuarios sin carrera
+            query = self.users_table.join(
+                self.careers,
+                self.users_table.c.id_career == self.careers.c.id_career,
+                isouter=True  # Esto realiza un LEFT JOIN
+            ).select().where(self.users_table.c.id_user == user_id)
+
+            result = db.execute(query)
+            user = result.fetchone()
+
+            if user is None:
+                raise HTTPException(status_code=404, detail="User not found")
+
+            # Convertir el resultado a un dict y manejar valores nulos en `career_name`
+            user_data = user._asdict()
+            user_data["career_name"] = user_data.get("career_name") or None  # Asegura que sea None si es NULL
+
+            return ProfileInfo(**user_data)
+        except Exception as e:
+            raise HTTPException(status_code=400, detail="DB Error while getting user profile: " + str(e))
+        finally:
+            db.close()
+
+    def update_user_profile(self, info: ProfileInfoUp):
+        db = self._get_db()
+        try:
+            query = self.users_table.update().where(self.users_table.c.id_user == info.id_user).values(
+                real_name=info.real_name,
+                phone_number=info.phone_number,
+                semester=info.semester,
+                id_career=info.id_career,
+                sex= info.sex
+            )
+            result = db.execute(query)
+            if result.rowcount == 0:  # rowcount indica el número de filas afectadas
+                raise HTTPException(status_code=404, detail="User not found")
+            db.commit()
+
+            return "User profile updated"
+        except Exception as e:
+            db.rollback()
+            raise HTTPException(status_code=400, detail="DB Error while updating user profile" + str(e))
+        finally:
+            db.close()
+    # verificar si el usuario ya tiene completos los campos de real_name, phone_number, semester, career
+    def check_user_info(self, user_id: int):
+        db = self._get_db()
+        try:
+            query = self.users_table.select().where(self.users_table.c.id_user == user_id)
+            result = db.execute(query)
+            user = result.fetchone()
+            if user is None:
+                raise HTTPException(status_code=404, detail="User not found")
+            if user.real_name is None or user.phone_number is None or user.semester is None or user.id_career is None:
+                return False
+            return True
+        except Exception as e:
+            raise HTTPException(status_code=400, detail="DB Error while checking user info" + str(e))
+        finally:
+            db.close()
+
+    def get_all_careers(self):
+        db = self._get_db()
+        try:
+            query = self.careers.select()
+            result = db.execute(query)
+            careers = result.fetchall()
+            return [Career(**career._asdict()) for career in careers]
+        except Exception as e:
+            raise HTTPException(status_code=400, detail="DB Error while getting all careers" + str(e))
+        finally:
+            db.close()
+
     def remove_member(self, club_id: int, user_id: int):
         db = self._get_db()
         try:
