@@ -12,6 +12,7 @@ from services.resource_service import ResourceService
 settings = get_settings()
 
 import json
+MAX_QUANTITY_QUESTIONS = 5
 
 def process_quiz_data(quiz_json):
     try:
@@ -166,10 +167,11 @@ class QuizService:
         score = 0
         answered_correctly: List[bool] = []
         total_time = correct_quiz.minutes_to_answer * 60
+        answer_value = (MAX_QUANTITY_QUESTIONS/correct_quiz.quantity_questions)
         for i in range(correct_quiz.quantity_questions):
             if quiz_submit.answers[i] == correct_quiz.correct_answers[i]:
                 answered_correctly.append(True)
-                score += 1
+                score += answer_value
             else:
                 answered_correctly.append(False)
         if quiz_submit.time_spent <= total_time*0.25:
